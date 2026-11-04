@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gleiche Einheit</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+/* Layout: same Karopapier world. Recipe (3 steps) + converter for €/ct, m/cm, kg/g; then the train-ticket story as swappable bars; then a 10-task round. */
+:root{
+  --paper:#fbfcff; --grid:#e3e9f5; --ink:#1a2342; --ink-soft:#56607c;
+  --pen:#2447c9; --pen-ink:#ffffff; --card:#ffffff; --line:#cdd6ea;
+  --big:#2447c9; --small:#d98a0c; --res:#7656d4; --cell-ink:#ffffff;
+  --ok:#1f8a4c; --no:#c2410c;
+  --display:"Bricolage Grotesque","Avenir Next","Trebuchet MS",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#17241e; --grid:#20322a; --ink:#eef4ef; --ink-soft:#a7b8ae;
+    --pen:#9db8ff; --pen-ink:#0f1830; --card:#1e2f27; --line:#33493e;
+    --big:#9db8ff; --small:#f5b93a; --res:#b9a4ff; --cell-ink:#10201a;
+    --ok:#5fd08d; --no:#ff9a62; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#17241e; --grid:#20322a; --ink:#eef4ef; --ink-soft:#a7b8ae;
+  --pen:#9db8ff; --pen-ink:#0f1830; --card:#1e2f27; --line:#33493e;
+  --big:#9db8ff; --small:#f5b93a; --res:#b9a4ff; --cell-ink:#10201a;
+  --ok:#5fd08d; --no:#ff9a62; color-scheme:dark;
+}
+body{
+  margin:0; background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:20px 20px;
+  color:var(--ink); font-family:var(--body); font-size:17px; line-height:1.5;
+}
+[hidden]{display:none!important}
+.wrap{
+  max-width:980px; margin:0 auto; display:grid; gap:44px;
+  padding-block:28px 72px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+h1,h2,h3{font-family:var(--display); text-wrap:balance; margin:0; line-height:1.08}
+h1{font-size:clamp(38px,7vw,58px); font-weight:800; letter-spacing:-.02em}
+h2{font-size:clamp(24px,4vw,32px); font-weight:750}
+h3{font-size:20px; font-weight:750}
+p{margin:0}
+.lede{font-size:19px; color:var(--ink-soft); max-width:52ch; margin-top:10px}
+.eyebrow{font:700 13px/1 var(--body); letter-spacing:.09em; text-transform:uppercase; color:var(--pen)}
+.sec-head{display:grid; gap:10px; max-width:62ch}
+.card{
+  background:var(--card); border:1.5px solid var(--line); border-radius:22px;
+  box-shadow:5px 5px 0 var(--line); padding:clamp(18px,3.5vw,32px); min-width:0;
+  display:grid; gap:18px;
+}
+.cbig{color:var(--big)} .csmall{color:var(--small)} .cres{color:var(--res)}
+
+/* recipe */
+.recipe{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; list-style:none; margin:14px 0 0; padding:0}
+.recipe li{background:var(--card); border:1.5px solid var(--line); border-radius:16px; padding:16px; display:grid; gap:6px; align-content:start}
+.recipe .n{font:800 30px/1 var(--display); color:var(--pen)}
+.recipe .t{font:800 20px/1.15 var(--display)}
+.recipe p{color:var(--ink-soft); font-size:16px}
+
+/* converter */
+.sys{display:flex; flex-wrap:wrap; gap:8px}
+.tab{
+  font:700 16px/1 var(--display); padding:10px 16px; border-radius:999px; cursor:pointer;
+  border:2px solid var(--line); background:var(--paper); color:var(--ink);
+}
+.tab[aria-pressed="true"]{background:var(--pen); border-color:var(--pen); color:var(--pen-ink)}
+.inrow{display:flex; flex-wrap:wrap; align-items:center; gap:10px; font:750 clamp(24px,4.5vw,36px)/1.2 var(--display)}
+.inrow input{
+  font:inherit; width:4.6ch; padding:4px 8px; text-align:center; color:var(--big);
+  background:var(--paper); border:2.5px solid var(--line); border-radius:12px;
+}
+.inrow input:focus-visible{outline:3px solid var(--pen); outline-offset:1px}
+.inrow .u{color:var(--ink-soft); font-size:.7em}
+.opbtn{
+  font:800 30px/1 var(--display); width:48px; height:48px; border-radius:12px; cursor:pointer;
+  border:2px solid var(--line); background:var(--paper); color:var(--ink-soft);
+}
+.opbtn[aria-pressed="true"]{border-color:var(--pen); color:var(--pen); background:color-mix(in srgb,var(--pen) 10%,var(--card))}
+.chips{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.chips .lbl{font-size:14px; color:var(--ink-soft)}
+.chip{
+  font:600 15px/1 var(--display); color:var(--ink); background:var(--paper);
+  border:1.5px solid var(--line); border-radius:999px; padding:8px 13px; cursor:pointer;
+}
+.chip:hover{border-color:var(--pen); color:var(--pen)}
+.steps{display:grid; gap:10px; list-style:none; margin:0; padding:0}
+.steps li{
+  display:grid; grid-template-columns:auto minmax(0,1fr); gap:4px 14px; align-items:baseline;
+  padding:12px 14px; border-radius:14px; border:1.5px dashed var(--line); animation:in .35s both;
+}
+.steps .k{font:800 15px/1.2 var(--display); color:var(--pen); white-space:nowrap}
+.steps .v{font:750 clamp(20px,3.2vw,27px)/1.35 var(--display); font-variant-numeric:tabular-nums; min-width:0}
+.steps .why{grid-column:2; color:var(--ink-soft); font-size:15px}
+.steps b{color:var(--small)}
+.steps .fade{opacity:.35}
+.steps .arrow{color:var(--ink-soft); font-weight:600}
+@keyframes in{from{opacity:0; transform:translateY(6px)}}
+.warn{color:var(--no); font-size:18px}
+
+/* tickets */
+.story{font-size:clamp(20px,2.8vw,24px); line-height:1.55; max-width:44ch; font-weight:700}
+.tk-ctl{display:flex; flex-wrap:wrap; gap:12px 22px; align-items:center}
+.stepper{display:flex; align-items:center; gap:8px; font:700 17px/1 var(--display)}
+.stepper button{
+  width:38px; height:38px; border-radius:10px; border:2px solid var(--line); background:var(--paper);
+  color:var(--ink); font:800 20px/1 var(--display); cursor:pointer;
+}
+.stepper .v{min-width:2ch; text-align:center; font-size:22px; font-variant-numeric:tabular-nums}
+.tk-wrap{display:grid; gap:6px}
+.brace{display:grid; gap:4px; text-align:center; font:800 18px/1.2 var(--display); color:var(--res)}
+.brace .ln{height:10px; border:2.5px solid currentColor; border-bottom:0; border-radius:5px 5px 0 0}
+.tk{display:flex; gap:4px; min-height:64px}
+.grp{display:flex; border-radius:10px; overflow:hidden; border:3px solid transparent; min-width:0; transition:border-color .3s}
+.grp.adult{border-color:var(--big)}
+.cell{
+  flex:1 1 0; min-width:0; display:grid; place-items:center; padding:4px 2px; overflow:hidden; white-space:nowrap;
+  font:750 14px/1.1 var(--display); color:var(--cell-ink); transition:background-color .35s;
+}
+.grp.kid .cell{background:var(--small)}
+.grp.adult .cell{background:var(--big)}
+.grp.adult .cell + .cell{border-left:2px dashed transparent}
+.tk.s1 .grp.adult .cell,.tk.s2 .grp.adult .cell{background:var(--small)}
+.tk.s1 .grp.adult .cell + .cell,.tk.s2 .grp.adult .cell + .cell{border-left-color:var(--cell-ink)}
+.grp.adult .one{flex:1; display:grid; place-items:center; font:750 14px/1.1 var(--display); color:var(--cell-ink); background:var(--big); padding:4px 2px; white-space:nowrap; overflow:hidden}
+.tk-legend{display:flex; flex-wrap:wrap; gap:6px 18px; color:var(--ink-soft); font-size:15px}
+.tk-legend i{display:inline-block; width:14px; height:14px; border-radius:4px; vertical-align:-2px; margin-right:6px}
+.tk-out{display:grid; gap:8px; font-size:18px}
+.tk-out p{animation:in .35s both}
+.tk-out .big{font:750 clamp(20px,3vw,26px)/1.3 var(--display)}
+.probe{color:var(--ok); font-weight:700; font-variant-numeric:tabular-nums}
+
+/* quiz */
+.qtop{display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; font:700 15px/1 var(--display); color:var(--ink-soft)}
+.bar-p{height:8px; border-radius:99px; background:var(--line); overflow:hidden; margin-top:8px}
+.bar-p i{display:block; height:100%; width:0; background:var(--pen); border-radius:99px; transition:width .3s}
+.task{font-size:clamp(21px,3vw,26px); line-height:1.55; max-width:44ch; font-weight:700}
+.ops{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px}
+.op{
+  font:750 clamp(19px,2.8vw,24px)/1.2 var(--display); padding:14px; border-radius:14px;
+  border:2px solid var(--line); background:var(--paper); color:var(--ink); cursor:pointer;
+}
+.op:hover{border-color:var(--pen)}
+.op.right{border-color:var(--ok); background:color-mix(in srgb,var(--ok) 14%,var(--card)); color:var(--ok)}
+.op.wrong{border-color:var(--no); color:var(--no); opacity:.7}
+.op:disabled{cursor:default}
+.say{font-size:19px; min-height:1.6em; max-width:62ch}
+.say.ok{color:var(--ok)} .say.no{color:var(--no)}
+.calc{display:flex; flex-wrap:wrap; align-items:baseline; gap:.3em; font:750 clamp(24px,4.5vw,36px)/1.2 var(--display)}
+.calc input{
+  font:inherit; color:var(--pen); width:4.6ch; text-align:center; padding:0 6px;
+  background:var(--paper); border:2.5px solid var(--line); border-radius:12px; outline:none;
+}
+.calc input:focus-visible{border-color:var(--pen)}
+.calc .u{color:var(--ink-soft); font-size:.7em}
+.stage{display:grid; gap:12px}
+.done{font:750 clamp(26px,5vw,38px)/1.15 var(--display)}
+.controls{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+.btn{
+  font:700 19px/1 var(--display); border-radius:14px; padding:14px 22px; cursor:pointer;
+  border:2px solid var(--pen); background:var(--pen); color:var(--pen-ink);
+}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent; color:var(--pen)}
+.btn:disabled{opacity:.4; cursor:not-allowed}
+.btn:focus-visible,.chip:focus-visible,.op:focus-visible,.tab:focus-visible,.opbtn:focus-visible,.stepper button:focus-visible{outline:3px solid var(--pen); outline-offset:2px}
+
+footer{color:var(--ink-soft); font-size:15px; display:flex; flex-wrap:wrap; gap:6px 18px}
+footer a{color:var(--pen)}
+
+@media (max-width:640px){
+  .recipe{grid-template-columns:minmax(0,1fr)}
+  .ops{grid-template-columns:minmax(0,1fr)}
+  .btn{font-size:17px; padding:12px 18px}
+  .cell,.grp.adult .one{font-size:11px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important; animation:none!important}
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <div class="eyebrow">Umrechnen</div>
+    <h1>Gleiche Einheit</h1>
+    <p class="lede">Rechnen klappt nur mit Gleichem. Euro und Cent, Meter und Zentimeter, Erwachsene und Kinder: Rechne erst alles in dieselbe Einheit um. Am einfachsten in die kleinere.</p>
+    <ol class="recipe">
+      <li><span class="n">1</span><span class="t">Umrechnen</span><p>Alles in die kleinere Einheit: Cent, Zentimeter, Gramm oder Kinder-Karten.</p></li>
+      <li><span class="n">2</span><span class="t">Rechnen</span><p>Jetzt sind es ganz normale Zahlen ohne Komma.</p></li>
+      <li><span class="n">3</span><span class="t">Zurückrechnen</span><p>Das Ergebnis wieder in die Einheit, nach der gefragt ist.</p></li>
+    </ol>
+  </header>
+
+  <section class="card" aria-labelledby="conv-title">
+    <h2 id="conv-title">Komma weg, dann rechnen</h2>
+    <div class="sys" id="sys" role="group" aria-label="Einheit wählen"></div>
+    <div class="inrow">
+      <input id="ia" inputmode="decimal" autocomplete="off" aria-label="Erste Zahl"><span class="u" id="ua"></span>
+      <button type="button" class="opbtn" id="op-minus" aria-pressed="true" aria-label="minus">−</button>
+      <button type="button" class="opbtn" id="op-plus" aria-pressed="false" aria-label="plus">+</button>
+      <input id="ib" inputmode="decimal" autocomplete="off" aria-label="Zweite Zahl"><span class="u" id="ub"></span>
+    </div>
+    <div class="chips" id="conv-chips"><span class="lbl">Probier:</span></div>
+    <ol class="steps" id="conv-steps" aria-live="polite"></ol>
+  </section>
+
+  <section class="card" aria-labelledby="tk-title">
+    <div class="sec-head">
+      <div class="eyebrow">Die Tausch-Regel steht in der Geschichte</div>
+      <h2 id="tk-title">Erwachsene in Kinder-Karten tauschen</h2>
+    </div>
+    <p class="story" id="tk-story"></p>
+    <div class="tk-ctl">
+      <div class="stepper"><span>Erwachsene</span><button type="button" data-k="A" data-d="-1" aria-label="ein Erwachsener weniger">−</button><span class="v" id="vA"></span><button type="button" data-k="A" data-d="1" aria-label="ein Erwachsener mehr">+</button></div>
+      <div class="stepper"><span>Kinder</span><button type="button" data-k="K" data-d="-1" aria-label="ein Kind weniger">−</button><span class="v" id="vK"></span><button type="button" data-k="K" data-d="1" aria-label="ein Kind mehr">+</button></div>
+      <div class="sys" id="rsel" role="group" aria-label="Kinder zahlen">
+        <button type="button" class="tab" data-r="2" aria-pressed="true">halber Preis</button>
+        <button type="button" class="tab" data-r="3" aria-pressed="false">ein Drittel</button>
+      </div>
+    </div>
+    <div class="tk-wrap">
+      <div class="brace"><span id="tk-total"></span><div class="ln"></div></div>
+      <div class="tk" id="tk" role="img"></div>
+      <div class="tk-legend"><span><i style="background:var(--big)"></i>Erwachsenen-Karte</span><span><i style="background:var(--small)"></i>Kinder-Karte</span></div>
+    </div>
+    <div class="controls">
+      <button class="btn" type="button" id="tk-next">1. Umrechnen</button>
+      <button class="btn ghost" type="button" id="tk-reset">Von vorn</button>
+    </div>
+    <div class="tk-out" id="tk-out" aria-live="polite"></div>
+  </section>
+
+  <section class="card" aria-labelledby="q-title">
+    <div class="eyebrow">Jetzt du</div>
+    <h2 id="q-title">10 Aufgaben mit Einheiten</h2>
+    <div>
+      <div class="qtop"><span id="qpos"></span><span id="qscore"></span></div>
+      <div class="bar-p"><i id="qbar"></i></div>
+    </div>
+    <div id="qbody" class="stage"></div>
+  </section>
+
+  <footer>
+    <a href="index.html">← Alle Übungen</a>
+    <span>Auch hier:</span>
+    <a href="rechengeschichten.html">Rechengeschichten</a>
+    <a href="abstand.html">Abstand</a>
+  </footer>
+</main>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const rint = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  const shuffle = arr => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+  // ---------- unit systems ----------
+  const SYS = {
+    geld:  {name:'Geld',    big:'€',  small:'ct', bigW:'Euro',      smallW:'Cent',       f:100,  places:2},
+    laenge:{name:'Länge',   big:'m',  small:'cm', bigW:'Meter',     smallW:'Zentimeter', f:100,  places:2},
+    gewicht:{name:'Gewicht',big:'kg', small:'g',  bigW:'Kilogramm', smallW:'Gramm',      f:1000, places:3}
+  };
+  const toSmall = (str, sys) => {
+    const x = parseFloat(String(str).trim().replace(/[^\d,.]/g, '').replace(',', '.'));
+    return isNaN(x) ? NaN : Math.round(x * sys.f);
+  };
+  const parts = (v, sys) => ({int: Math.floor(v / sys.f), frac: String(v % sys.f).padStart(sys.places, '0')});
+  const bigStr = (v, sys) => { const p = parts(v, sys); return `${p.int},${p.frac} ${sys.big}`; };
+  const bigHTML = (v, sys) => { const p = parts(v, sys); return `${p.int},<b>${p.frac}</b> ${sys.big}`; };
+  const smallHTML = (v, sys) => {
+    const p = parts(v, sys);
+    if (p.int > 0) return `${p.int}<b>${p.frac}</b> ${sys.small}`;
+    const lead = p.frac.match(/^0*/)[0], rest = p.frac.slice(lead.length) || '0';
+    return `<span class="fade">${p.int}${lead}</span><b>${rest}</b> ${sys.small}`;
+  };
+  const rule = sys => `1 ${sys.big} = ${sys.f} ${sys.small}. Das Komma rutscht ${sys.places} Stellen nach rechts.`;
+
+  // ---------- converter ----------
+  const CV = {sys:'geld', a:'5', b:'0,78', op:'-'};
+  const PRESETS = [
+    ['geld', '5', '-', '0,78'], ['geld', '10', '-', '3,45'], ['geld', '2,50', '+', '1,75'],
+    ['laenge', '2', '-', '0,35'], ['laenge', '1,20', '+', '0,85'], ['gewicht', '1', '-', '0,350']
+  ];
+  const fmtIn = (s, sys) => { const v = toSmall(s, sys); return isNaN(v) ? s : bigStr(v, sys).replace(/ .*/, ''); };
+  function drawSys(){
+    $('#sys').innerHTML = Object.entries(SYS).map(([k, s]) => `<button type="button" class="tab" data-sys="${k}" aria-pressed="${k === CV.sys}">${s.name}: ${s.big} und ${s.small}</button>`).join('');
+    document.querySelectorAll('#sys .tab').forEach(b => b.addEventListener('click', () => {
+      CV.sys = b.dataset.sys;
+      const p = PRESETS.find(x => x[0] === CV.sys); CV.a = p[1]; CV.op = p[2]; CV.b = p[3];
+      syncInputs(); drawConv();
+    }));
+  }
+  function syncInputs(){
+    const s = SYS[CV.sys];
+    $('#ia').value = CV.a; $('#ib').value = CV.b; $('#ua').textContent = s.big; $('#ub').textContent = s.big;
+    $('#op-minus').setAttribute('aria-pressed', CV.op === '-'); $('#op-plus').setAttribute('aria-pressed', CV.op === '+');
+    document.querySelectorAll('#sys .tab').forEach(b => b.setAttribute('aria-pressed', b.dataset.sys === CV.sys));
+  }
+  function drawConv(){
+    const s = SYS[CV.sys], a = toSmall(CV.a, s), b = toSmall(CV.b, s), ol = $('#conv-steps');
+    if (isNaN(a) || isNaN(b)){ ol.innerHTML = `<li><span class="k">Hoppla</span><span class="v warn">Schreib oben zwei Zahlen hin, zum Beispiel 5 oder 0,78.</span></li>`; return; }
+    const res = CV.op === '-' ? a - b : a + b, opS = CV.op === '-' ? '−' : '+';
+    let h = `<li><span class="k">1 Umrechnen</span><span class="v">${bigHTML(a, s)} <span class="arrow">→</span> ${smallHTML(a, s)} &nbsp; und &nbsp; ${bigHTML(b, s)} <span class="arrow">→</span> ${smallHTML(b, s)}</span><span class="why">${rule(s)}</span></li>`;
+    if (res < 0){
+      h += `<li style="animation-delay:.15s"><span class="k">2 Rechnen</span><span class="v warn">${a} ${s.small} ${opS} ${b} ${s.small} geht nicht: Da würdest du unter 0 landen. Tausch die Zahlen.</span></li>`;
+    } else {
+      h += `<li style="animation-delay:.15s"><span class="k">2 Rechnen</span><span class="v">${a} ${s.small} ${opS} ${b} ${s.small} = <span class="cres">${res} ${s.small}</span></span><span class="why">Ohne Komma, ganz normal. Probe: ${CV.op === '-' ? `${res} + ${b} = ${a}` : `${res} − ${b} = ${a}`} ✓</span></li>`;
+      h += `<li style="animation-delay:.3s"><span class="k">3 Zurück</span><span class="v">${smallHTML(res, s)} <span class="arrow">→</span> <span class="cres">${bigHTML(res, s)}</span></span><span class="why">Das Komma rutscht wieder ${s.places} Stellen nach links.</span></li>`;
+    }
+    ol.innerHTML = h;
+  }
+  PRESETS.forEach(([sys, a, op, b]) => {
+    const s = SYS[sys], c = document.createElement('button');
+    c.type = 'button'; c.className = 'chip';
+    c.textContent = `${fmtIn(a, s)} ${s.big} ${op === '-' ? '−' : '+'} ${fmtIn(b, s)} ${s.big}`;
+    c.addEventListener('click', () => { Object.assign(CV, {sys, a, b, op}); syncInputs(); drawConv(); });
+    $('#conv-chips').appendChild(c);
+  });
+  ['ia', 'ib'].forEach(id => $('#' + id).addEventListener('input', e => {
+    e.target.value = e.target.value.replace(/[^\d,.]/g, '').slice(0, 8);
+    CV[id === 'ia' ? 'a' : 'b'] = e.target.value; drawConv();
+  }));
+  $('#op-minus').addEventListener('click', () => { CV.op = '-'; syncInputs(); drawConv(); });
+  $('#op-plus').addEventListener('click', () => { CV.op = '+'; syncInputs(); drawConv(); });
+
+  // ---------- tickets ----------
+  const TK = {A:2, K:4, r:2, step:0};
+  const kidPrice = () => TK.r === 2 ? 12 : 8;
+  const rName = r => r === 2 ? 'den halben Preis' : 'ein Drittel vom Preis';
+  function drawTk(){
+    const p = kidPrice(), n = TK.A * TK.r + TK.K, T = p * n, ap = TK.r * p;
+    $('#vA').textContent = TK.A; $('#vK').textContent = TK.K;
+    document.querySelectorAll('#rsel .tab').forEach(b => b.setAttribute('aria-pressed', +b.dataset.r === TK.r));
+    $('#tk-story').textContent = `${TK.A} Erwachsene und ${TK.K} Kinder fahren mit der Bahn. Die Fahrt kostet insgesamt ${T} €. Kinder zahlen ${rName(TK.r)}. Wie teuer ist die Fahrkarte für einen Erwachsenen?`;
+    $('#tk-total').textContent = `${T} € zusammen`;
+    const tk = $('#tk'); tk.className = `tk s${TK.step}`;
+    let h = '';
+    for (let i = 0; i < TK.A; i++){
+      h += `<div class="grp adult" style="flex:${TK.r} 1 0">`;
+      if (TK.step === 0) h += `<span class="one">Erw.</span>`;
+      else if (TK.step === 3) h += `<span class="one">${ap} €</span>`;
+      else for (let j = 0; j < TK.r; j++) h += `<span class="cell">${TK.step === 1 ? 'Kind' : p + ' €'}</span>`;
+      h += `</div>`;
+    }
+    for (let i = 0; i < TK.K; i++) h += `<div class="grp kid" style="flex:1 1 0"><span class="cell">${TK.step >= 2 ? p + ' €' : 'Kind'}</span></div>`;
+    tk.innerHTML = h;
+    tk.setAttribute('aria-label', `${TK.A} Erwachsenen-Karten und ${TK.K} Kinder-Karten`);
+
+    const out = [];
+    if (TK.step >= 1) out.push(`<p class="big"><span class="cbig">1 Umrechnen:</span> Eine Erwachsenen-Karte kostet so viel wie ${TK.r} Kinder-Karten. ${TK.A} Erwachsene sind also ${TK.A} · ${TK.r} = ${TK.A * TK.r} Kinder-Karten. Zusammen mit den ${TK.K} Kindern: <b>${n} Kinder-Karten</b>.</p>`);
+    if (TK.step >= 2) out.push(`<p class="big"><span class="cbig">2 Rechnen:</span> ${n} gleiche Karten kosten ${T} €. ${T} € : ${n} = <b>${p} €</b> für eine Kinder-Karte.</p>`);
+    if (TK.step >= 3) out.push(`<p class="big"><span class="cbig">3 Zurück:</span> Eine Erwachsenen-Karte = ${TK.r} · ${p} € = <b class="cres">${ap} €</b>.</p><p class="probe">Probe: ${TK.A} · ${ap} € + ${TK.K} · ${p} € = ${TK.A * ap} € + ${TK.K * p} € = ${T} € ✓</p>`);
+    $('#tk-out').innerHTML = out.join('');
+    const nb = $('#tk-next');
+    nb.textContent = ['1. Umrechnen', '2. Rechnen', '3. Zurückrechnen', 'Fertig'][TK.step];
+    nb.disabled = TK.step === 3;
+  }
+  document.querySelectorAll('.tk-ctl .stepper button').forEach(b => b.addEventListener('click', () => {
+    const k = b.dataset.k; TK[k] = clamp(TK[k] + +b.dataset.d, k === 'A' ? 1 : 0, k === 'A' ? 3 : 6); TK.step = 0; drawTk();
+  }));
+  document.querySelectorAll('#rsel .tab').forEach(b => b.addEventListener('click', () => { TK.r = +b.dataset.r; TK.step = 0; drawTk(); }));
+  $('#tk-next').addEventListener('click', () => { TK.step = Math.min(3, TK.step + 1); drawTk(); });
+  $('#tk-reset').addEventListener('click', () => { TK.step = 0; drawTk(); });
+
+  // ---------- quiz ----------
+  const euro = ct => bigStr(ct, SYS.geld);
+  const nonRound = (lo, hi) => { let v; do { v = rint(lo, hi); } while (v % 10 === 0); return v; };
+  const TEMPLATES = [
+    {id:'bahn', fixed:true, gen:() => ticket(2, 4, 2, 12)},
+    {id:'eis', fixed:true, gen:() => moneyLeft(500, 78)},
+    {id:'eis2', gen:() => { const A = rint(3, 20) * 100; return moneyLeft(A, nonRound(25, A - 60)); }},
+    {id:'rueck', gen:() => {
+      const A = pick([1000, 2000, 5000]), B = nonRound(Math.round(A * 0.3), A - 55), s = SYS.geld;
+      return {text:`Tim bezahlt ein Buch für ${euro(B)} mit einem ${A / 100}-€-Schein. Wie viel Rückgeld bekommt er?`, sys:s, answerBig:true, ans:A - B,
+        conv:`${euro(A)} = ${A} ct und ${euro(B)} = ${B} ct`, calc:`${A} ct − ${B} ct`, probe:`Probe: ${euro(A - B)} + ${euro(B)} = ${euro(A)} ✓`};
+    }},
+    {id:'heft', gen:() => {
+      const X = nonRound(105, 495), Y = nonRound(55, 395), s = SYS.geld;
+      return {text:`Ein Heft kostet ${euro(X)}, ein Stift ${euro(Y)}. Wie viel kostet beides zusammen?`, sys:s, answerBig:true, ans:X + Y,
+        conv:`${euro(X)} = ${X} ct und ${euro(Y)} = ${Y} ct`, calc:`${X} ct + ${Y} ct`, probe:`Probe: ${euro(X + Y)} − ${euro(Y)} = ${euro(X)} ✓`};
+    }},
+    {id:'brett', gen:() => {
+      const A = rint(2, 4) * 100, B = nonRound(15, 95), s = SYS.laenge;
+      return {text:`Ein Brett ist ${A / 100} m lang. Tom sägt ${B} cm ab. Wie viele Zentimeter ist der Rest lang?`, sys:s, answerBig:false, ans:A - B,
+        conv:`${A / 100} m = ${A} cm`, calc:`${A} cm − ${B} cm`, probe:`Probe: ${A - B} cm + ${B} cm = ${A} cm ✓`};
+    }},
+    {id:'sprung', gen:() => {
+      const B = rint(150, 240), A = B + rint(12, 70), s = SYS.laenge;
+      return {text:`Mia springt ${bigStr(A, s)} weit, Ben ${bigStr(B, s)}. Wie viele Zentimeter weiter springt Mia?`, sys:s, answerBig:false, ans:A - B,
+        conv:`${bigStr(A, s)} = ${A} cm und ${bigStr(B, s)} = ${B} cm`, calc:`${A} cm − ${B} cm`, probe:`Probe: ${B} cm + ${A - B} cm = ${A} cm ✓`};
+    }},
+    {id:'mehl', gen:() => {
+      const A = pick([1000, 2000]), B = rint(3, 17) * 50, s = SYS.gewicht;
+      return {text:`In der Tüte sind ${A / 1000} kg Mehl. Für einen Kuchen braucht man ${B} g. Wie viel Gramm Mehl bleiben übrig?`, sys:s, answerBig:false, ans:A - B,
+        conv:`${A / 1000} kg = ${A} g`, calc:`${A} g − ${B} g`, probe:`Probe: ${A - B} g + ${B} g = ${A} g ✓`};
+    }},
+    {id:'bahn2', gen:() => ticket(rint(1, 3), rint(1, 5), 2, rint(4, 15))},
+    {id:'zoo', gen:() => ticket(rint(1, 2), rint(2, 6), 3, rint(2, 6), 'Zoo')},
+    {id:'flaschen', gen:() => {
+      const G = rint(1, 4), K = rint(1, 5), small = rint(1, 3), n = 2 * G + K, L = n * small;
+      return {text:`Eine große Flasche fasst so viel wie 2 kleine. ${G} große und ${K} kleine Flaschen fassen zusammen ${L} Liter. Wie viele Liter fasst eine kleine Flasche?`,
+        units:['kleine Flaschen', 'große Flaschen'], unitWhy:'Eine große Flasche sind 2 kleine. In kleinen Flaschen gibt es kein Komma.', answerUnit:'Liter', ans:small,
+        conv:`${G} große = ${2 * G} kleine Flaschen, zusammen ${n} kleine Flaschen`, calc:`${L} Liter : ${n}`, probe:`Probe: ${n} · ${small} Liter = ${L} Liter ✓`};
+    }}
+  ];
+  function moneyLeft(A, B){
+    return {text:`Lea hat ${A / 100} €. Sie kauft ein Eis für ${euro(B)}. Wie viel Geld bleibt übrig?`, sys:SYS.geld, answerBig:true, ans:A - B,
+      conv:`${A / 100} € = ${A} ct und ${euro(B)} = ${B} ct`, calc:`${A} ct − ${B} ct`, probe:`Probe: ${euro(A - B)} + ${euro(B)} = ${euro(A)} ✓`};
+  }
+  function ticket(A, K, r, p, where){
+    const n = A * r + K, T = n * p, ap = r * p;
+    const text = where === 'Zoo'
+      ? `${A} Erwachsene und ${K} Kinder gehen in den Zoo. Der Eintritt kostet zusammen ${T} €. Kinder zahlen ein Drittel vom Preis. Wie viel kostet der Eintritt für einen Erwachsenen?`
+      : `${A === 1 ? 'Ein Erwachsener' : A + ' Erwachsene'} und ${K === 1 ? 'ein Kind' : K + ' Kinder'} fahren mit der Bahn. Die Fahrt kostet insgesamt ${T} €. Kinder zahlen den halben Preis. Wie teuer ist die Fahrkarte für einen Erwachsenen?`;
+    return {text, units:['Kinder-Karten', 'Erwachsenen-Karten'], unitWhy:`Eine Erwachsenen-Karte sind ${r} Kinder-Karten. So werden alle Karten gleich.`, answerUnit:'€', ans:ap,
+      conv:`${A} Erwachsene = ${A * r} Kinder-Karten, zusammen ${n} Kinder-Karten`, calc:`${T} € : ${n} = ${p} € pro Kinder-Karte. Dann · ${r}`,
+      probe:`Probe: ${A} · ${ap} € + ${K} · ${p} € = ${T} € ✓`};
+  }
+  const ROUND = 10;
+  let R = null, Q = null;
+  function newRound(){
+    const fixed = TEMPLATES.filter(t => t.fixed), rest = TEMPLATES.filter(t => !t.fixed);
+    const picks = [...shuffle(rest), ...shuffle(rest)].slice(0, ROUND - fixed.length);
+    R = {tasks:[...fixed, ...picks].map(t => ({...t.gen(), firstOk:null})), i:0};
+    start();
+  }
+  function start(){
+    const t = R.tasks[R.i];
+    const units = t.units || [t.sys.smallW, t.sys.bigW];
+    Q = {t, step:1, units:shuffle(units.map((u, i) => ({u, ok:i === 0})))};
+    render();
+  }
+  const ansUnit = t => t.answerUnit || (t.answerBig ? t.sys.big : t.sys.small);
+  function render(){
+    const t = Q.t;
+    let h = `<p class="task">${t.text}</p><h3>1. In welche Einheit rechnest du alles um?</h3><div class="ops">${Q.units.map((o, i) =>
+      `<button type="button" class="op${o.state ? ' ' + o.state : ''}" data-i="${i}"${Q.step > 1 ? ' disabled' : ''}>${o.u}</button>`).join('')}</div>`;
+    h += `<p class="say ${Q.uCls || ''}">${Q.uMsg || ''}</p>`;
+    if (Q.step >= 2){
+      h += `<h3>2. Rechnen und 3. zurückrechnen</h3><div class="calc"><span>Antwort:</span><input id="ain" inputmode="decimal" autocomplete="off" aria-label="Antwort"${Q.step === 3 ? ' disabled' : ''} value="${Q.last || ''}"><span class="u">${ansUnit(t)}</span></div>`;
+      if (Q.step === 2) h += `<div class="controls"><button class="btn" id="acheck" type="button">Prüfen</button><button class="btn ghost" id="atip" type="button">Tipp</button></div>`;
+      h += `<p class="say" id="tip"${Q.tip ? '' : ' hidden'}>Rechne: <b>${t.calc}</b>.${t.answerBig ? ` Dann zurück in ${t.sys.bigW}: Komma ${t.sys.places} Stellen nach links.` : ''}</p>`;
+      h += `<p class="say ${Q.aCls || ''}" id="asay" aria-live="polite">${Q.aMsg || ''}</p>`;
+    }
+    if (Q.step === 3) h += `<p class="probe">${t.probe}</p><div class="controls"><button class="btn" id="next" type="button">${R.i + 1 < ROUND ? 'Nächste Aufgabe' : 'Fertig'}</button></div>`;
+    $('#qbody').innerHTML = h;
+    wire(); top();
+  }
+  function top(){
+    $('#qpos').textContent = `Aufgabe ${Math.min(R.i + 1, ROUND)} von ${ROUND}`;
+    $('#qscore').textContent = `Beim ersten Versuch richtig: ${R.tasks.filter(x => x.firstOk).length}`;
+    $('#qbar').style.width = `${(R.i + (Q && Q.step === 3 ? 1 : 0)) / ROUND * 100}%`;
+  }
+  function parseAns(str, t){
+    if (t.answerBig) return toSmall(str, t.sys);
+    const x = parseFloat(String(str).replace(',', '.'));
+    return isNaN(x) ? NaN : Math.round(x * 100) / 100;
+  }
+  function wire(){
+    document.querySelectorAll('#qbody .op').forEach(b => b.addEventListener('click', () => {
+      if (Q.step !== 1) return;
+      const o = Q.units[+b.dataset.i], t = Q.t;
+      const why = t.unitWhy || `${rule(t.sys)} In ${t.sys.smallW} gibt es kein Komma.`;
+      if (o.ok){
+        o.state = 'right'; Q.step = 2; Q.uCls = 'ok'; Q.uMsg = `Genau! ${why}<br>Umgerechnet: <b>${t.conv}</b>.`;
+        render(); const ain = $('#ain'); if (ain) ain.focus({preventScroll:true});
+      } else {
+        o.state = 'wrong'; Q.uCls = 'no'; Q.uMsg = `Das geht manchmal, aber dann bekommst du oft ein Komma. Nimm die kleinere Einheit. ${why}`;
+        render();
+      }
+    }));
+    const ac = $('#acheck');
+    if (ac){
+      const ain = $('#ain');
+      ac.addEventListener('click', check);
+      ain.addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+      $('#atip').addEventListener('click', () => { Q.tip = true; $('#tip').hidden = false; });
+    }
+    const nx = $('#next');
+    if (nx) nx.addEventListener('click', () => { R.i++; R.i < ROUND ? start() : finish(); });
+  }
+  function check(){
+    const ain = $('#ain'), t = Q.t, v = parseAns(ain.value, t), say = $('#asay');
+    if (isNaN(v)){ say.className = 'say no'; say.textContent = 'Schreib zuerst deine Antwort ins Kästchen.'; return; }
+    const ok = v === t.ans;
+    if (R.tasks[R.i].firstOk === null) R.tasks[R.i].firstOk = ok;
+    if (ok){
+      Q.step = 3; Q.last = ain.value; Q.aCls = 'ok'; Q.aMsg = 'Richtig!'; render();
+      const nx = $('#next'); if (nx) nx.focus({preventScroll:true});
+    } else {
+      let msg = 'Noch nicht. Tipp auf „Tipp“, wenn du Hilfe brauchst.';
+      if (t.sys && t.answerBig && v === t.ans * t.sys.f) msg = `Fast! Das ist die Zahl in ${t.sys.smallW}. Gefragt ist ${t.sys.bigW}: Komma ${t.sys.places} Stellen nach links.`;
+      if (t.units && t.units[0] === 'Kinder-Karten' && v * 2 === t.ans) msg = 'Fast! Das ist der Preis für eine Kinder-Karte. Gefragt ist die Erwachsenen-Karte.';
+      if (t.units && t.units[0] === 'Kinder-Karten' && v * 3 === t.ans) msg = 'Fast! Das ist der Preis für ein Kind. Gefragt ist ein Erwachsener.';
+      Q.aCls = 'no'; Q.aMsg = msg; say.className = 'say no'; say.textContent = msg; ain.select();
+    }
+    top();
+  }
+  function finish(){
+    const ok = R.tasks.filter(x => x.firstOk).length;
+    $('#qbody').innerHTML = `<p class="done">Geschafft! ${ok} von ${ROUND} beim ersten Versuch richtig.</p><div class="controls"><button class="btn" id="again" type="button">Neue Runde</button></div>`;
+    $('#qpos').textContent = `${ROUND} von ${ROUND}`; $('#qbar').style.width = '100%';
+    $('#again').addEventListener('click', newRound);
+  }
+
+  drawSys(); syncInputs(); drawConv();
+  drawTk();
+  newRound();
+})();
+</script>
+</body>
+</html>
