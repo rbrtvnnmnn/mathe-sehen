@@ -11,6 +11,7 @@ Am besten in dieser Reihenfolge:
 | 1 | **Zahlen sehen** | Teilen mit Rechenklötzen. 800 : 200 ist dasselbe Bild wie 8 : 2, nur mit Hunderter-Platten statt Einer-Würfeln. |
 | 2 | **Nullen-Paare** | Nullen streichen, aber nur im Paar: 800 : 20 wird 80 : 2. Mit der Nullen-Falle und der Probe als Kontrolle. |
 | 3 | **Rechengeschichten** | Textaufgaben: Ist das mal oder geteilt? Die Zahlen als *das Ganze*, *ein Stück* und *Anzahl* einordnen, das Bild ansehen, dann die Rechnung wählen. |
+| 4 | **Abstand** | Minus misst, wie weit zwei Zahlen auseinander liegen. „Subtrahiere 17 von 30“ heißt 30 − 17. Mit Zahlenstrahl, Paaren und „Wie viel mehr?“-Aufgaben. |
 
 Jede Übung endet mit Aufgaben zum Selberrechnen.
 

@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Abstand</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+/* Layout: same Karopapier world. Hero = draggable Zahlenstrahl (difference as distance); then pairing kids (wie viel mehr?); the rule; a 10-task round. */
+:root{
+  --paper:#fbfcff; --grid:#e3e9f5; --ink:#1a2342; --ink-soft:#56607c;
+  --pen:#2447c9; --pen-ink:#ffffff; --card:#ffffff; --line:#cdd6ea;
+  --ca:#2447c9; --cb:#d9480f; --gap:#7656d4; --jump:#1f8a4c;
+  --hair-brown:#6b4226; --hair-blond:#e3b230; --face:#f6dcc4; --face-line:#b48a6a;
+  --ok:#1f8a4c; --no:#c2410c;
+  --display:"Bricolage Grotesque","Avenir Next","Trebuchet MS",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#17241e; --grid:#20322a; --ink:#eef4ef; --ink-soft:#a7b8ae;
+    --pen:#9db8ff; --pen-ink:#0f1830; --card:#1e2f27; --line:#33493e;
+    --ca:#9db8ff; --cb:#ff9a62; --gap:#b9a4ff; --jump:#5fd08d;
+    --hair-brown:#a0704a; --hair-blond:#f0c955; --face:#ead0b8; --face-line:#9c7a5e;
+    --ok:#5fd08d; --no:#ff9a62; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#17241e; --grid:#20322a; --ink:#eef4ef; --ink-soft:#a7b8ae;
+  --pen:#9db8ff; --pen-ink:#0f1830; --card:#1e2f27; --line:#33493e;
+  --ca:#9db8ff; --cb:#ff9a62; --gap:#b9a4ff; --jump:#5fd08d;
+  --hair-brown:#a0704a; --hair-blond:#f0c955; --face:#ead0b8; --face-line:#9c7a5e;
+  --ok:#5fd08d; --no:#ff9a62; color-scheme:dark;
+}
+body{
+  margin:0; background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:20px 20px;
+  color:var(--ink); font-family:var(--body); font-size:17px; line-height:1.5;
+}
+[hidden]{display:none!important}
+.wrap{
+  max-width:980px; margin:0 auto; display:grid; gap:44px;
+  padding-block:28px 72px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+h1,h2,h3{font-family:var(--display); text-wrap:balance; margin:0; line-height:1.08}
+h1{font-size:clamp(38px,7vw,58px); font-weight:800; letter-spacing:-.02em}
+h2{font-size:clamp(24px,4vw,32px); font-weight:750}
+h3{font-size:20px; font-weight:750}
+p{margin:0}
+.lede{font-size:19px; color:var(--ink-soft); max-width:52ch; margin-top:10px}
+.eyebrow{font:700 13px/1 var(--body); letter-spacing:.09em; text-transform:uppercase; color:var(--pen)}
+.sec-head{display:grid; gap:10px; max-width:62ch}
+.card{
+  background:var(--card); border:1.5px solid var(--line); border-radius:22px;
+  box-shadow:5px 5px 0 var(--line); padding:clamp(18px,3.5vw,32px); min-width:0;
+  display:grid; gap:18px;
+}
+.ca{color:var(--ca)} .cb{color:var(--cb)} .cg{color:var(--gap)}
+
+/* number line */
+.nlw{width:100%; min-width:0; touch-action:pan-y; user-select:none; -webkit-user-select:none}
+.nlw.drag{cursor:grab}
+.nl{display:block; width:100%; height:auto; overflow:visible}
+.nl text{font-family:var(--display); text-anchor:middle}
+.nl .axis{stroke:var(--ink); stroke-width:2.5}
+.nl .tick{stroke:var(--ink-soft); stroke-width:1.4}
+.nl .tick.maj{stroke:var(--ink); stroke-width:2}
+.nl .tl{font-size:14px; font-weight:600; fill:var(--ink-soft)}
+.nl .gapr{fill:color-mix(in srgb,var(--gap) 30%,transparent)}
+.nl .br{fill:none; stroke:var(--gap); stroke-width:2.5}
+.nl .gt{font-size:20px; font-weight:800; fill:var(--gap)}
+.nl .arc{fill:none; stroke:var(--jump); stroke-width:2.5}
+.nl .al{font-size:16px; font-weight:800; fill:var(--jump)}
+.nl .arc.bad{stroke:var(--no); stroke-dasharray:6 5}
+.nl .al.bad{fill:var(--no)}
+.nl .neg{fill:color-mix(in srgb,var(--no) 13%,transparent)}
+.nl .negt{font-size:15px; font-weight:700; fill:var(--no)}
+.nl .mk circle{stroke:var(--card); stroke-width:3}
+.nl .mk.a circle{fill:var(--ca)} .nl .mk.b circle{fill:var(--cb)} .nl .mk.x circle{fill:var(--no)}
+.nl .ml{font-size:22px; font-weight:800}
+.nl .ml.a{fill:var(--ca)} .nl .ml.b{fill:var(--cb)} .nl .ml.x{fill:var(--no)}
+.nlw.drag .mk{cursor:grab}
+
+.nums{display:flex; flex-wrap:wrap; gap:10px 18px; align-items:center; font:700 18px/1 var(--display)}
+.nums label{display:flex; gap:8px; align-items:center}
+.nums input{
+  font:inherit; width:4ch; padding:7px 6px; text-align:center; color:inherit;
+  background:var(--paper); border:2px solid var(--line); border-radius:10px;
+}
+.nums input:focus-visible{outline:3px solid var(--pen); outline-offset:1px}
+#na{color:var(--ca)} #nb{color:var(--cb)}
+.chips{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.chips .lbl{font-size:14px; color:var(--ink-soft)}
+.chip{
+  font:600 15px/1 var(--display); color:var(--ink); background:var(--paper);
+  border:1.5px solid var(--line); border-radius:999px; padding:8px 13px; cursor:pointer;
+}
+.chip:hover{border-color:var(--pen); color:var(--pen)}
+.out{display:grid; gap:6px; font-size:18px}
+.out .big{font:750 clamp(22px,3.4vw,30px)/1.2 var(--display)}
+.out .eq{font:700 20px/1.3 var(--display); font-variant-numeric:tabular-nums}
+.out .soft{color:var(--ink-soft)}
+.hint-line{color:var(--ink-soft); font-size:15px}
+
+/* compare kids */
+.cmp-ctl{display:flex; flex-wrap:wrap; gap:12px 24px; align-items:center}
+.stepper{display:flex; align-items:center; gap:8px; font:700 17px/1 var(--display)}
+.stepper button{
+  width:38px; height:38px; border-radius:10px; border:2px solid var(--line); background:var(--paper);
+  color:var(--ink); font:800 20px/1 var(--display); cursor:pointer;
+}
+.stepper button:hover{border-color:var(--pen)}
+.stepper .v{min-width:2ch; text-align:center; font-size:22px; font-variant-numeric:tabular-nums}
+.kids{display:block; width:100%; height:auto; overflow:visible}
+.kids text{font-family:var(--display)}
+.kids .rl{font-size:16px; font-weight:750; fill:var(--ink)}
+.kids .face{fill:var(--face); stroke:var(--face-line); stroke-width:1.2}
+.kids .eye{fill:var(--ink)}
+.kids .body{fill:var(--line)}
+.kids .hb{fill:var(--hair-brown)} .kids .hy{fill:var(--hair-blond)}
+.kids .pair{stroke:var(--ink-soft); stroke-width:2.5; stroke-dasharray:5 5; animation:fadein .3s both}
+.kids .left rect{fill:color-mix(in srgb,var(--gap) 16%,transparent); stroke:var(--gap); stroke-width:2.5}
+.kids .left text{font-size:20px; font-weight:800; fill:var(--gap); text-anchor:middle}
+@keyframes fadein{from{opacity:0}}
+
+/* rules */
+.rules{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-top:14px}
+.rule{background:var(--card); border:1.5px solid var(--line); border-radius:16px; padding:18px; display:grid; gap:10px; align-content:start; min-width:0}
+.rule .verdict{font:800 22px/1.15 var(--display)}
+.words{width:100%; border-collapse:collapse; font-size:16px}
+.words td{padding:7px 4px; border-top:1.5px dashed var(--line); vertical-align:top}
+.words td:last-child{font:700 16px/1.3 var(--display); white-space:nowrap; text-align:right}
+
+/* trainer */
+.qtop{display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; font:700 15px/1 var(--display); color:var(--ink-soft)}
+.bar-p{height:8px; border-radius:99px; background:var(--line); overflow:hidden; margin-top:8px}
+.bar-p i{display:block; height:100%; width:0; background:var(--pen); border-radius:99px; transition:width .3s}
+.task{font-size:clamp(21px,3vw,26px); line-height:1.55; max-width:42ch; font-weight:700}
+.ops{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px}
+.op{
+  font:750 clamp(20px,3vw,26px)/1.2 var(--display); font-variant-numeric:tabular-nums;
+  padding:14px; border-radius:14px; border:2px solid var(--line); background:var(--paper); color:var(--ink); cursor:pointer;
+}
+.op:hover{border-color:var(--pen)}
+.op.right{border-color:var(--ok); background:color-mix(in srgb,var(--ok) 14%,var(--card)); color:var(--ok)}
+.op.wrong{border-color:var(--no); color:var(--no); opacity:.7}
+.op:disabled{cursor:default}
+.say{font-size:19px; min-height:1.6em; max-width:62ch}
+.say.ok{color:var(--ok)} .say.no{color:var(--no)}
+.calc{display:flex; flex-wrap:wrap; align-items:baseline; gap:.3em; font:750 clamp(26px,5vw,40px)/1.2 var(--display); font-variant-numeric:tabular-nums}
+.calc input{
+  font:inherit; color:var(--pen); width:3.4ch; text-align:center; padding:0 6px;
+  background:var(--paper); border:2.5px solid var(--line); border-radius:12px; outline:none;
+}
+.calc input:focus-visible{border-color:var(--pen)}
+.probe{color:var(--ok); font-weight:700; font-size:19px; font-variant-numeric:tabular-nums}
+.done{font:750 clamp(26px,5vw,38px)/1.15 var(--display)}
+.stage{display:grid; gap:12px}
+.controls{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+.btn{
+  font:700 19px/1 var(--display); border-radius:14px; padding:14px 22px; cursor:pointer;
+  border:2px solid var(--pen); background:var(--pen); color:var(--pen-ink);
+}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent; color:var(--pen)}
+.btn:focus-visible,.chip:focus-visible,.op:focus-visible,.stepper button:focus-visible{outline:3px solid var(--pen); outline-offset:2px}
+
+footer{color:var(--ink-soft); font-size:15px; display:flex; flex-wrap:wrap; gap:6px 18px}
+footer a{color:var(--pen)}
+
+@media (max-width:640px){
+  .rules{grid-template-columns:minmax(0,1fr)}
+  .ops{grid-template-columns:minmax(0,1fr)}
+  .btn{font-size:17px; padding:12px 18px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important; animation:none!important}
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <div class="eyebrow">Minus sehen</div>
+    <h1>Abstand</h1>
+    <p class="lede">Minus heißt nicht nur wegnehmen. Minus misst auch, wie weit zwei Zahlen auseinander liegen. Dieser Abstand heißt Differenz.</p>
+  </header>
+
+  <section class="card" aria-labelledby="line-title">
+    <h2 id="line-title">Wie weit ist es von einer Zahl zur anderen?</h2>
+    <p class="hint-line">Zieh die zwei Punkte auf dem Zahlenstrahl hin und her, oder tipp irgendwo auf den Strahl.</p>
+    <div class="nlw drag" id="hero-line" aria-label="Zahlenstrahl mit zwei Punkten"></div>
+    <div class="nums">
+      <label>Punkt 1 <input id="na" inputmode="numeric" autocomplete="off" value="17"></label>
+      <label>Punkt 2 <input id="nb" inputmode="numeric" autocomplete="off" value="30"></label>
+    </div>
+    <div class="out" id="hero-out" aria-live="polite"></div>
+    <div class="chips" id="hero-chips"><span class="lbl">Probier:</span></div>
+  </section>
+
+  <section class="card" aria-labelledby="cmp-title">
+    <div class="sec-head">
+      <div class="eyebrow">Wie viel mehr?</div>
+      <h2 id="cmp-title">Paare bilden</h2>
+      <p>5 Kinder haben braune Haare. 10 Kinder haben blonde Haare. Wie viel mehr Kinder haben blonde als braune Haare? Bilde Paare: immer ein Kind mit braunen und eins mit blonden Haaren. Wer übrig bleibt, ist der Unterschied.</p>
+    </div>
+    <div class="cmp-ctl">
+      <div class="stepper"><span>Braun</span><button type="button" data-k="brown" data-d="-1" aria-label="ein Kind weniger mit braunen Haaren">−</button><span class="v" id="vb">5</span><button type="button" data-k="brown" data-d="1" aria-label="ein Kind mehr mit braunen Haaren">+</button></div>
+      <div class="stepper"><span>Blond</span><button type="button" data-k="blond" data-d="-1" aria-label="ein Kind weniger mit blonden Haaren">−</button><span class="v" id="vy">10</span><button type="button" data-k="blond" data-d="1" aria-label="ein Kind mehr mit blonden Haaren">+</button></div>
+      <button class="btn" type="button" id="pair">Paare bilden</button>
+    </div>
+    <div id="kids" role="img"></div>
+    <div class="out" id="cmp-out" aria-live="polite"></div>
+    <div class="nlw" id="cmp-line" hidden></div>
+  </section>
+
+  <section aria-labelledby="rule-title">
+    <div class="sec-head">
+      <div class="eyebrow">Merke</div>
+      <h2 id="rule-title">Die größere Zahl kommt nach vorne</h2>
+    </div>
+    <div class="rules">
+      <div class="rule">
+        <div class="verdict">Minus misst den Abstand</div>
+        <p>Die Differenz von 30 und 17 ist der Abstand zwischen 17 und 30. Du kannst rückwärts rechnen (30 − 17) oder vorwärts ergänzen (17 + 13 = 30). Beides ergibt 13.</p>
+        <div class="nlw" id="rule-line" aria-hidden="true"></div>
+      </div>
+      <div class="rule">
+        <div class="verdict">Diese Wörter heißen Minus</div>
+        <table class="words">
+          <tr><td>Subtrahiere 17 <b>von 30</b></td><td>30 − 17</td></tr>
+          <tr><td>Ziehe 17 <b>von 30</b> ab</td><td>30 − 17</td></tr>
+          <tr><td>Vermindere 30 <b>um 17</b></td><td>30 − 17</td></tr>
+          <tr><td>Differenz von 30 und 17</td><td>30 − 17</td></tr>
+          <tr><td>Wie viel <b>mehr</b>, weniger, älter, wärmer, weiter?</td><td>groß − klein</td></tr>
+        </table>
+        <p>Bei 17 − 30 würdest du unter 0 landen. Darum steht die größere Zahl vorne.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="q-title">
+    <div class="eyebrow">Jetzt du</div>
+    <h2 id="q-title">10 Minus-Aufgaben</h2>
+    <div>
+      <div class="qtop"><span id="qpos"></span><span id="qscore"></span></div>
+      <div class="bar-p"><i id="qbar"></i></div>
+    </div>
+    <div id="qbody" class="stage"></div>
+  </section>
+
+  <footer>
+    <a href="index.html">← Alle Übungen</a>
+    <span>Auch hier:</span>
+    <a href="rechengeschichten.html">Rechengeschichten</a>
+  </footer>
+</main>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const rint = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+  const shuffle = arr => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+  // ---------- number line ----------
+  function jumps(s, b){
+    const out = []; let c = s;
+    const n10 = Math.ceil(c / 10) * 10;
+    if (n10 > c && n10 <= b){ out.push([c, n10]); c = n10; }
+    const f10 = Math.floor(b / 10) * 10;
+    if (f10 > c){ out.push([c, f10]); c = f10; }
+    if (b > c) out.push([c, b]);
+    return out;
+  }
+  const geo = (o, W) => {
+    const pad = 26, y = o.jumps || o.demo ? 128 : 44;
+    return {pad, y, X: v => pad + (v - o.lo) / (o.hi - o.lo) * (W - 2 * pad)};
+  };
+  // o: {a, b, lo, hi, gap, jumps, demo:{start, minus}}
+  function lineSVG(o, W){
+    W = Math.max(280, Math.round(W || 700));
+    const {pad, y, X} = geo(o, W), H = y + (o.gap ? 92 : 50);
+    const range = o.hi - o.lo, ppu = (W - 2 * pad) / range;
+    const minor = ppu < 6 ? 5 : 1, labelEvery = ppu * 10 < 30 ? 20 : 10;
+    const marks = [o.a, o.b, o.demo ? o.demo.start - o.demo.minus : null].filter(v => v != null);
+    let s = '';
+    if (o.lo < 0){
+      s += `<rect class="neg" x="${X(o.lo)}" y="${y - 30}" width="${X(0) - X(o.lo)}" height="60" rx="8"/>`;
+      s += `<text class="negt" x="${(X(o.lo) + X(0)) / 2}" y="${y + 50}">unter 0</text>`;
+    }
+    s += `<line class="axis" x1="${X(o.lo) - 6}" y1="${y}" x2="${X(o.hi) + 10}" y2="${y}"/>`;
+    s += `<path d="M${X(o.hi) + 10} ${y - 6}l10 6l-10 6z" fill="currentColor" style="color:var(--ink)"/>`;
+    if (o.gap){
+      const lo = Math.min(o.a, o.b), hi = Math.max(o.a, o.b);
+      if (hi > lo){
+        s += `<rect class="gapr" x="${X(lo)}" y="${y - 7}" width="${X(hi) - X(lo)}" height="14" rx="3"/>`;
+        s += `<path class="br" d="M${X(lo)} ${y + 44}v8H${X(hi)}v-8"/>`;
+        s += `<text class="gt" x="${(X(lo) + X(hi)) / 2}" y="${y + 80}">Abstand: ${hi - lo}</text>`;
+      }
+    }
+    for (let v = Math.ceil(o.lo / minor) * minor; v <= o.hi; v += minor){
+      const maj = v % 10 === 0, mid = v % 5 === 0, h = maj ? 10 : mid ? 7 : 4;
+      s += `<line class="tick${maj ? ' maj' : ''}" x1="${X(v)}" y1="${y - h}" x2="${X(v)}" y2="${y + h}"/>`;
+      if (v % labelEvery === 0 && !marks.some(m => Math.abs(X(m) - X(v)) < 22)) s += `<text class="tl" x="${X(v)}" y="${y + 30}">${v}</text>`;
+    }
+    const arc = (from, to, label, bad) => {
+      const x1 = X(from), x2 = X(to), mx = (x1 + x2) / 2, h = Math.min(54, 14 + Math.abs(x2 - x1) * 0.22);
+      return `<path class="arc${bad ? ' bad' : ''}" d="M${x1} ${y - 12}Q${mx} ${y - 12 - 2 * h} ${x2} ${y - 12}"/>` +
+             `<text class="al${bad ? ' bad' : ''}" x="${mx}" y="${y - 18 - h}">${label}</text>`;
+    };
+    if (o.jumps){
+      const lo = Math.min(o.a, o.b), hi = Math.max(o.a, o.b);
+      jumps(lo, hi).forEach(([f, t]) => { s += arc(f, t, `+${t - f}`); });
+    }
+    if (o.demo){
+      const land = o.demo.start - o.demo.minus;
+      s += arc(o.demo.start, land, `−${o.demo.minus}`, true);
+    }
+    const mk = (v, cls, label) => `<g class="mk ${cls}" data-m="${cls}"><circle cx="${X(v)}" cy="${y}" r="12"/></g><text class="ml ${cls}" x="${X(v)}" y="${y + 32}">${label}</text>`;
+    if (o.a != null) s += mk(o.a, 'a', o.a);
+    if (o.b != null) s += mk(o.b, 'b', o.b);
+    if (o.demo) s += mk(o.demo.start - o.demo.minus, 'x', '?');
+    return `<svg class="nl" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${s}</svg>`;
+  }
+  const lines = [];
+  function drawLine(el, opts){ el._opts = opts; el.innerHTML = lineSVG(opts, el.clientWidth); if (!lines.includes(el)) lines.push(el); }
+  let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { lines.forEach(el => { if (el.isConnected && !el.hidden) el.innerHTML = lineSVG(el._opts, el.clientWidth); }); drawKids(); }, 120); });
+  const rangeFor = (...v) => ({lo:0, hi: Math.max(...v) <= 50 ? 50 : 100});
+
+  // ---------- hero ----------
+  const H = {a:17, b:30};
+  const heroLine = $('#hero-line'), na = $('#na'), nb = $('#nb');
+  function drawHero(){
+    const r = rangeFor(H.a, H.b, 1);
+    drawLine(heroLine, {a:H.a, b:H.b, lo:r.lo, hi:r.hi, gap:true, jumps:true});
+    const lo = Math.min(H.a, H.b), hi = Math.max(H.a, H.b), d = hi - lo;
+    const js = jumps(lo, hi);
+    const cl = v => v === H.a ? 'ca' : 'cb';
+    let h = `<p class="big">Von <span class="${cl(lo)}">${lo}</span> bis <span class="${cl(hi)}">${hi}</span> sind es <span class="cg">${d}</span>.</p>`;
+    if (d > 0){
+      h += `<p class="eq">${hi} − ${lo} = ${d}<span class="soft"> · Probe: ${lo} + ${d} = ${hi} ✓</span></p>`;
+      if (js.length > 1) h += `<p class="soft">In Sprüngen: ${lo} ${js.map(([f, t]) => `→ ${t} (+${t - f})`).join(' ')}. Zusammen: ${js.map(([f, t]) => t - f).join(' + ')} = ${d}.</p>`;
+    } else h += `<p class="soft">Beide Punkte liegen aufeinander. Der Abstand ist 0.</p>`;
+    $('#hero-out').innerHTML = h;
+  }
+  function setHero(a, b){ H.a = clamp(a, 0, 100); H.b = clamp(b, 0, 100); na.value = H.a; nb.value = H.b; drawHero(); }
+  [['17 und 30', 17, 30], ['5 und 10', 5, 10], ['23 und 41', 23, 41], ['8 und 35', 8, 35], ['46 und 92', 46, 92]].forEach(([t, a, b]) => {
+    const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = t;
+    c.addEventListener('click', () => setHero(a, b)); $('#hero-chips').appendChild(c);
+  });
+  [na, nb].forEach(el => el.addEventListener('input', () => {
+    el.value = el.value.replace(/\D/g, '').slice(0, 3);
+    const a = parseInt(na.value, 10), b = parseInt(nb.value, 10);
+    if (!isNaN(a) && !isNaN(b)){ H.a = clamp(a, 0, 100); H.b = clamp(b, 0, 100); drawHero(); }
+  }));
+  let dragging = null;
+  function valueAt(clientX){
+    const r = rangeFor(H.a, H.b, 1), rect = heroLine.getBoundingClientRect();
+    const W = Math.max(280, Math.round(heroLine.clientWidth)), {pad} = geo({jumps:true}, W);
+    const px = (clientX - rect.left) * (W / rect.width);
+    return clamp(Math.round(r.lo + (px - pad) / (W - 2 * pad) * (r.hi - r.lo)), r.lo, r.hi);
+  }
+  heroLine.addEventListener('pointerdown', e => {
+    const v = valueAt(e.clientX);
+    dragging = Math.abs(v - H.a) <= Math.abs(v - H.b) ? 'a' : 'b';
+    heroLine.setPointerCapture(e.pointerId);
+    H[dragging] = v; na.value = H.a; nb.value = H.b; drawHero();
+  });
+  heroLine.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const v = valueAt(e.clientX);
+    if (v !== H[dragging]){ H[dragging] = v; na.value = H.a; nb.value = H.b; drawHero(); }
+  });
+  const stop = () => { dragging = null; };
+  heroLine.addEventListener('pointerup', stop); heroLine.addEventListener('pointercancel', stop);
+
+  // ---------- compare kids ----------
+  const C = {brown:5, blond:10, paired:false};
+  const kidsEl = $('#kids');
+  function kid(x, y, hair){
+    return `<g transform="translate(${x} ${y})"><path class="body" d="M-11 26q11-10 22 0v6h-22z"/><circle class="face" r="12" cy="6"/>` +
+      `<path class="${hair}" d="M-13 6A13 13 0 0 1 13 6Q8 -1 0 0Q-8 -1 -13 6z"/><circle class="eye" cx="-4" cy="8" r="1.6"/><circle class="eye" cx="4" cy="8" r="1.6"/></g>`;
+  }
+  function drawKids(){
+    const W = Math.max(280, Math.round(kidsEl.clientWidth || 700));
+    const n = Math.max(C.brown, C.blond, 1);
+    const sp = clamp((W - 30) / n, 24, 48), x0 = 15 + sp / 2;
+    const y1 = 44, y2 = 170, Ht = y2 + 50;
+    const X = i => x0 + i * sp;
+    let s = `<text class="rl" x="4" y="20">Braune Haare: ${C.brown}</text><text class="rl" x="4" y="${y2 - 26}">Blonde Haare: ${C.blond}</text>`;
+    const m = Math.min(C.brown, C.blond);
+    if (C.paired){
+      for (let i = 0; i < m; i++) s += `<line class="pair" x1="${X(i)}" y1="${y1 + 36}" x2="${X(i)}" y2="${y2 - 8}" style="animation-delay:${reduce ? 0 : i * 90}ms"/>`;
+      const d = Math.abs(C.brown - C.blond);
+      if (d > 0){
+        const top = C.brown > C.blond, yy = top ? y1 - 6 : y2 - 6;
+        s += `<g class="left"><rect x="${X(m) - sp / 2 + 2}" y="${yy - 4}" width="${d * sp - 4}" height="48" rx="10"/>` +
+             `<text x="${(X(m) + X(m + d - 1)) / 2}" y="${(y1 + y2) / 2 + 14}">${d} mehr</text></g>`;
+      }
+    }
+    for (let i = 0; i < C.brown; i++) s += kid(X(i), y1, 'hb');
+    for (let i = 0; i < C.blond; i++) s += kid(X(i), y2, 'hy');
+    kidsEl.innerHTML = `<svg class="kids" viewBox="0 0 ${W} ${Ht}" width="${W}" height="${Ht}">${s}</svg>`;
+    kidsEl.setAttribute('aria-label', `${C.brown} Kinder mit braunen und ${C.blond} Kinder mit blonden Haaren`);
+  }
+  function drawCompare(){
+    $('#vb').textContent = C.brown; $('#vy').textContent = C.blond;
+    drawKids();
+    const out = $('#cmp-out'), line = $('#cmp-line');
+    if (!C.paired){ out.innerHTML = `<p class="soft">Tipp auf „Paare bilden“.</p>`; line.hidden = true; return; }
+    const big = Math.max(C.brown, C.blond), small = Math.min(C.brown, C.blond), d = big - small;
+    const more = C.blond > C.brown ? 'blonde' : 'braune', less = C.blond > C.brown ? 'braune' : 'blonde';
+    out.innerHTML = d === 0
+      ? `<p class="big">Alle haben einen Partner. Es gibt keinen Unterschied.</p><p class="eq">${big} − ${small} = 0</p>`
+      : `<p class="big"><span class="cg">${d}</span> ${d === 1 ? 'Kind bleibt' : 'Kinder bleiben'} übrig. So viel mehr Kinder haben ${more} als ${less} Haare.</p>
+         <p class="eq">${big} − ${small} = ${d}<span class="soft"> · Probe: ${small} + ${d} = ${big} ✓</span></p>
+         <p class="soft">Auf dem Zahlenstrahl ist es derselbe Abstand: von ${small} bis ${big}.</p>`;
+    line.hidden = false;
+    drawLine(line, {a:small, b:big, lo:0, hi:20, gap:true});
+  }
+  document.querySelectorAll('.stepper button').forEach(b => b.addEventListener('click', () => {
+    C[b.dataset.k] = clamp(C[b.dataset.k] + +b.dataset.d, 0, 15); drawCompare();
+  }));
+  $('#pair').addEventListener('click', () => { C.paired = true; drawCompare(); });
+
+  // ---------- trainer ----------
+  const T = [
+    {text:'Subtrahiere {S} von {B}.', gen:() => [17, 30], fixed:true,
+     key:'„von {B}“ heißt: Du startest bei {B} und ziehst {S} ab.'},
+    {text:'{S} Kinder haben braune Haare. {B} Kinder haben blonde Haare. Wie viel mehr Kinder haben blonde als braune Haare?', gen:() => [5, 10], fixed:true,
+     key:'Wie viel mehr? Das ist der Unterschied: die größere Zahl minus die kleinere.'},
+    {text:'Ziehe {S} von {B} ab.', gen:() => { const s = rint(6, 45); return [s, s + rint(5, 40)]; },
+     key:'„von {B}“ heißt: Du startest bei {B}.'},
+    {text:'Vermindere {B} um {S}.', gen:() => { const s = rint(6, 45); return [s, s + rint(5, 40)]; },
+     key:'„Vermindere {B}“ heißt: {B} wird kleiner, und zwar um {S}.'},
+    {text:'Bilde die Differenz von {B} und {S}.', gen:() => { const s = rint(6, 45); return [s, s + rint(5, 40)]; },
+     key:'Die Differenz ist der Abstand. Die größere Zahl kommt nach vorne.'},
+    {text:'Um wie viel ist {S} kleiner als {B}?', gen:() => { const s = rint(6, 45); return [s, s + rint(5, 40)]; },
+     key:'Um wie viel kleiner? Das ist der Abstand zwischen den Zahlen.'},
+    {text:'Lena ist {S} Jahre alt. Ihre Oma ist {B} Jahre alt. Wie viel älter ist die Oma?', gen:() => [rint(8, 13), rint(58, 86)],
+     key:'Wie viel älter? Das ist der Abstand zwischen den beiden Altern.'},
+    {text:'Morgens zeigt das Thermometer {S} Grad. Mittags sind es {B} Grad. Um wie viel Grad ist es wärmer geworden?', gen:() => { const s = rint(2, 14); return [s, s + rint(4, 16)]; },
+     key:'Wie viel wärmer? Das ist der Abstand zwischen den Temperaturen.'},
+    {text:'Ein Zug fährt von Kilometer {S} bis Kilometer {B}. Wie viele Kilometer fährt er?', gen:() => { const s = rint(12, 50); return [s, s + rint(15, 45)]; },
+     key:'Die Strecke ist der Abstand zwischen den zwei Kilometer-Schildern.'},
+    {text:'Lisa hat {B} Sticker. Ben hat {S} Sticker. Wie viele Sticker hat Ben weniger als Lisa?', gen:() => { const s = rint(9, 40); return [s, s + rint(5, 35)]; },
+     key:'Wie viele weniger? Das ist der Unterschied: die größere Zahl minus die kleinere.'},
+    {text:'Auf dem Zahlenstrahl sitzt ein Käfer bei {B} und eine Ameise bei {S}. Wie weit sind die beiden voneinander entfernt?', gen:() => { const s = rint(4, 40); return [s, s + rint(8, 45)]; },
+     key:'Wie weit entfernt? Das ist der Abstand auf dem Zahlenstrahl.'}
+  ];
+  const ROUND = 10;
+  let R = null, S = null;
+  const fillT = (str, s, b) => str.replace(/\{S\}/g, s).replace(/\{B\}/g, b);
+
+  function newRound(){
+    const fixed = T.filter(t => t.fixed), rest = shuffle(T.filter(t => !t.fixed)).slice(0, ROUND - fixed.length);
+    R = {tasks:[...fixed, ...rest].map(t => { const [s, b] = t.gen(); return {t, s, b, firstOk:false}; }), i:0};
+    startTask();
+  }
+  function startTask(){
+    const k = R.tasks[R.i];
+    S = {...k, step:1, opFirst:null, ops: shuffle([
+      {t:`${k.b} − ${k.s}`, ok:true}, {t:`${k.s} − ${k.b}`, why:'rev'}, {t:`${k.b} + ${k.s}`, why:'plus'}
+    ])};
+    render();
+  }
+  function render(){
+    const k = S;
+    let h = `<p class="task">${fillT(k.t.text, k.s, k.b)}</p>`;
+    h += `<h3>Welche Rechnung passt?</h3><div class="ops">${k.ops.map((o, i) =>
+      `<button type="button" class="op${o.state ? ' ' + o.state : ''}" data-i="${i}"${k.step > 1 ? ' disabled' : ''}>${o.t}</button>`).join('')}</div>`;
+    h += `<p class="say ${k.opCls || ''}" aria-live="polite">${k.opMsg || ''}</p>`;
+    if (k.demo) h += `<div class="nlw" id="demo-line"></div>`;
+    if (k.step >= 2){
+      h += `<div class="calc"><span>${k.b} − ${k.s} =</span><input id="ain" inputmode="numeric" autocomplete="off" aria-label="Ergebnis"${k.step === 3 ? ` disabled value="${k.b - k.s}"` : ''}></div>`;
+      if (k.step === 2) h += `<div class="controls"><button class="btn" id="acheck" type="button">Prüfen</button><button class="btn ghost" id="atip" type="button">Zahlenstrahl zeigen</button></div>`;
+      h += `<p class="say ${k.aCls || ''}" id="asay" aria-live="polite">${k.aMsg || ''}</p>`;
+      h += `<div class="nlw" id="tip-line"${k.showTip || k.step === 3 ? '' : ' hidden'}></div>`;
+    }
+    if (k.step === 3){
+      h += `<p class="probe">Probe: ${k.s} + ${k.b - k.s} = ${k.b} ✓</p>`;
+      h += `<div class="controls"><button class="btn" id="next" type="button">${R.i + 1 < ROUND ? 'Nächste Aufgabe' : 'Fertig'}</button></div>`;
+    }
+    $('#qbody').innerHTML = h;
+    const r = rangeFor(k.b);
+    if (k.demo){ const lo = Math.floor((k.s - k.b) / 10) * 10; drawLine($('#demo-line'), {a:null, b:null, lo, hi:Math.ceil(k.b / 10) * 10 + 10, demo:{start:k.s, minus:k.b}}); }
+    const tl = $('#tip-line'); if (tl && !tl.hidden) drawLine(tl, {a:k.s, b:k.b, lo:r.lo, hi:r.hi, gap:true, jumps:true});
+    wire(); top();
+  }
+  function top(){
+    $('#qpos').textContent = `Aufgabe ${Math.min(R.i + 1, ROUND)} von ${ROUND}`;
+    $('#qscore').textContent = `Rechnung sofort richtig: ${R.tasks.filter(x => x.firstOk).length}`;
+    $('#qbar').style.width = `${(R.i + (S && S.step === 3 ? 1 : 0)) / ROUND * 100}%`;
+  }
+  function wire(){
+    document.querySelectorAll('#qbody .op').forEach(b => b.addEventListener('click', () => {
+      if (S.step !== 1) return;
+      const o = S.ops[+b.dataset.i], key = fillT(S.t.key, S.s, S.b);
+      if (S.opFirst === null){ S.opFirst = !!o.ok; R.tasks[R.i].firstOk = !!o.ok; }
+      if (o.ok){
+        o.state = 'right'; S.step = 2; S.demo = false; S.opCls = 'ok'; S.opMsg = `Genau! ${key}`;
+        render(); const ain = $('#ain'); if (ain) ain.focus({preventScroll:true});
+      } else {
+        o.state = 'wrong'; S.opCls = 'no';
+        if (o.why === 'rev'){ S.demo = true; S.opMsg = `Schau: Bei ${S.s} − ${S.b} startest du bei ${S.s} und gehst ${S.b} zurück. Dann landest du unter 0. ${key}`; }
+        else { S.demo = false; S.opMsg = `Plus macht es größer. Gefragt ist aber der Unterschied. ${key}`; }
+        render();
+      }
+    }));
+    const ac = $('#acheck');
+    if (ac){
+      const ain = $('#ain');
+      ac.addEventListener('click', check);
+      ain.addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+      ain.addEventListener('input', () => { ain.value = ain.value.replace(/\D/g, '').slice(0, 4); });
+      $('#atip').addEventListener('click', () => { S.showTip = true; const tl = $('#tip-line'); tl.hidden = false; const r = rangeFor(S.b); drawLine(tl, {a:S.s, b:S.b, lo:r.lo, hi:r.hi, gap:true, jumps:true}); });
+    }
+    const nx = $('#next');
+    if (nx) nx.addEventListener('click', () => { R.i++; R.i < ROUND ? startTask() : finish(); });
+  }
+  function check(){
+    const ain = $('#ain'), v = parseInt(ain.value, 10), say = $('#asay');
+    if (isNaN(v)){ say.className = 'say no'; say.textContent = 'Schreib zuerst dein Ergebnis ins Kästchen.'; return; }
+    if (v === S.b - S.s){
+      S.step = 3; S.aCls = 'ok'; S.aMsg = 'Richtig!'; render();
+      const nx = $('#next'); if (nx) nx.focus({preventScroll:true});
+    } else {
+      S.aCls = 'no'; S.aMsg = `Noch nicht. Probe: ${S.s} + ${v} = ${S.s + v}, nicht ${S.b}. Tipp auf „Zahlenstrahl zeigen“.`;
+      say.className = 'say no'; say.textContent = S.aMsg; ain.select();
+    }
+  }
+  function finish(){
+    const ok = R.tasks.filter(x => x.firstOk).length;
+    $('#qbody').innerHTML = `<p class="done">Geschafft! Bei ${ok} von ${ROUND} Aufgaben war die Rechnung sofort richtig.</p>
+      <div class="controls"><button class="btn" id="again" type="button">Neue Runde</button></div>`;
+    $('#qpos').textContent = `${ROUND} von ${ROUND}`; $('#qbar').style.width = '100%';
+    $('#again').addEventListener('click', newRound);
+  }
+
+  // ---------- start ----------
+  drawHero();
+  drawCompare();
+  drawLine($('#rule-line'), {a:17, b:30, lo:0, hi:40, gap:true, jumps:true});
+  newRound();
+})();
+</script>
+</body>
+</html>
