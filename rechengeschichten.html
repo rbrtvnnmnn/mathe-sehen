@@ -183,7 +183,41 @@ p{margin:0}
 footer{color:var(--ink-soft); font-size:15px; display:flex; flex-wrap:wrap; gap:6px 18px}
 footer a{color:var(--pen)}
 
+/* Formeldreieck */
+.tri-box{
+  display:grid; grid-template-columns:minmax(0,1fr) minmax(0,340px); gap:24px; align-items:center;
+  margin-top:18px; background:var(--card); border:1.5px solid var(--line); border-radius:16px; padding:20px;
+}
+.tri-text{display:grid; gap:10px; min-width:0}
+.tri-text .ex{color:var(--ink-soft); font-size:16px}
+.formula-big{font:800 clamp(22px,3.4vw,30px)/1.25 var(--display)}
+.formula-big .q,.tri-hint .q{color:var(--no)}
+.tri{width:100%; height:auto; display:block; overflow:visible}
+.tri polygon{stroke:var(--ink); stroke-width:3; stroke-linejoin:round; transition:fill .2s}
+.tri .rg[data-r="W"] polygon{fill:color-mix(in srgb,var(--rw) 15%,var(--card))}
+.tri .rg[data-r="P"] polygon{fill:color-mix(in srgb,var(--rp) 18%,var(--card))}
+.tri .rg[data-r="N"] polygon{fill:color-mix(in srgb,var(--rn) 16%,var(--card))}
+.tri .rg.cov polygon{fill:var(--ink)}
+.tri text{text-anchor:middle; font-family:var(--display)}
+.tri .lbl{font-size:21px; font-weight:800}
+.tri .rg[data-r="W"] .lbl{fill:var(--rw)} .tri .rg[data-r="P"] .lbl{fill:var(--rp)} .tri .rg[data-r="N"] .lbl{fill:var(--rn)}
+.tri .val{font-size:15px; font-weight:700; fill:var(--ink)}
+.tri .rg.cov .lbl{fill:var(--card); font-size:40px}
+.tri .rg.cov .val{fill:var(--card)}
+.tri.live .rg{cursor:pointer}
+.tri.live .rg:hover polygon{stroke:var(--pen)}
+.tri.live .rg:focus{outline:none}
+.tri.live .rg:focus-visible polygon{stroke:var(--pen); stroke-width:5}
+.tri .opb{pointer-events:none}
+.tri .opb circle{fill:var(--card); stroke:var(--ink); stroke-width:2}
+.tri .opb text{font-size:22px; font-weight:800; fill:var(--ink); dominant-baseline:central}
+.tri-hint{display:grid; grid-template-columns:130px minmax(0,1fr); gap:16px; align-items:center; font-size:18px}
+.tri-hint b{font-family:var(--display)}
+
 @media (max-width:680px){
+  .tri-box{grid-template-columns:minmax(0,1fr)}
+  .tri-box .tri{max-width:300px; margin:0 auto}
+  .tri-hint{grid-template-columns:100px minmax(0,1fr); font-size:16px}
   .rules{grid-template-columns:minmax(0,1fr)}
   .slots{grid-template-columns:minmax(0,1fr)}
   .slot{grid-template-columns:auto 1fr auto; align-items:baseline; gap:4px 10px}
@@ -231,6 +265,15 @@ footer a{color:var(--pen)}
         <div class="formula">Ganzes : ein Stück (wie oft passt?)</div>
         <p class="ex">10 €, ein Heft kostet 2 €. Wie viele? 10 € : 2 € = 5</p>
       </div>
+    </div>
+    <div class="tri-box">
+      <div class="tri-text">
+        <h3>Das Formeldreieck</h3>
+        <p>Tipp auf den Teil, den du suchst. Er wird abgedeckt. Was übrig bleibt, ist die Rechnung: <b>übereinander</b> heißt geteilt, <b>nebeneinander</b> heißt mal.</p>
+        <p class="formula-big" id="tri-f" aria-live="polite"></p>
+        <p class="ex" id="tri-ex"></p>
+      </div>
+      <div id="tri-live"></div>
     </div>
   </section>
 
@@ -459,7 +502,7 @@ footer a{color:var(--pen)}
       h += `<div class="stage">${modelHTML()}</div>`;
       h += `<div class="stage"><h3>Welche Rechnung passt?</h3><div class="ops" id="ops">${(S.ops || []).map((o, i) =>
         `<button type="button" class="op${o.state ? ' ' + o.state : ''}" data-i="${i}"${S.step > 2 ? ' disabled' : ''}>${o.t}</button>`).join('')}</div>
-        <p class="say" id="opsay">${S.opMsg || ''}</p></div>`;
+        <p class="say" id="opsay">${S.opMsg || ''}</p>${S.showTri && S.step === 2 ? triHint() : ''}</div>`;
     }
     if (S.step >= 3){
       const correct = S.ops.find(o => o.ok).t;
@@ -530,6 +573,7 @@ footer a{color:var(--pen)}
       } else {
         o.state = 'wrong';
         S.opMsg = o.why === 'rev' ? `Fast! Beim Teilen steht das Ganze vorne. ${reason()}` : `Noch nicht. ${reason()}`;
+        S.showTri = true;
         render();
       }
     }));
@@ -574,6 +618,50 @@ footer a{color:var(--pen)}
     $('#again').addEventListener('click', newRound);
   }
 
+  // ---------- Formeldreieck ----------
+  const TRI = {W:'150,10 225.8,140 74.2,140', P:'74.2,140 150,140 150,250 10,250', N:'150,140 225.8,140 290,250 150,250'};
+  const TRI_POS = {W:[150,96], P:[92,198], N:[210,198]};
+  const TRI_LAB = {W:'Ganzes', P:'Ein Stück', N:'Anzahl'};
+  const RCLS = {W:'w', P:'p', N:'n'};
+  const badge = (x, y, t) => `<g class="opb"><circle cx="${x}" cy="${y}" r="14"/><text x="${x}" y="${y}">${t}</text></g>`;
+  function triSVG(cover, vals, live){
+    let g = '';
+    for (const r of ['W','P','N']){
+      const c = r === cover, [x, y] = TRI_POS[r];
+      const sub = c ? TRI_LAB[r] : vals ? vals[r] : '';
+      g += `<g class="rg${c ? ' cov' : ''}" data-r="${r}"${live ? ` role="button" tabindex="0" aria-pressed="${c}" aria-label="${TRI_LAB[r]} abdecken"` : ''}>
+        <polygon points="${TRI[r]}"/>
+        <text class="lbl" x="${x}" y="${c ? y + 6 : y}">${c ? '?' : TRI_LAB[r]}</text>
+        ${sub ? `<text class="val" x="${x}" y="${y + 26}">${sub}</text>` : ''}</g>`;
+    }
+    g += badge(112, 140, ':') + badge(188, 140, ':') + badge(150, 168, '·');
+    return `<svg class="tri${live ? ' live' : ''}" viewBox="0 0 300 262"${live ? '' : ' aria-hidden="true"'}>${g}</svg>`;
+  }
+  function formula(r, vals){
+    const nm = vals || TRI_LAB;
+    const s = x => `<span class="${RCLS[x]}">${nm[x]}</span>`;
+    const rhs = r === 'W' ? `${s('P')} · ${s('N')}` : r === 'P' ? `${s('W')} : ${s('N')}` : `${s('W')} : ${s('P')}`;
+    return {rhs, full:`${s(r)} = ${rhs}`};
+  }
+  function triHint(){
+    const vals = {W:fv('W'), P:fv('P'), N:`${S.N}`};
+    return `<div class="tri-hint">${triSVG(S.t.ask, vals, false)}<p>Formeldreieck: Deck ${PHRASE[S.t.ask]} ab. Übrig bleibt <b>${formula(S.t.ask, vals).rhs}</b>.</p></div>`;
+  }
+  const EXV = {W:'10 €', P:'2 €', N:'5'};
+  let triCover = 'N';
+  function renderTri(focus){
+    $('#tri-live').innerHTML = triSVG(triCover, EXV, true);
+    $('#tri-f').innerHTML = formula(triCover).full;
+    $('#tri-ex').innerHTML = `Mit den Heften von oben: ${formula(triCover, EXV).rhs} = <b>${EXV[triCover]}</b>`;
+    document.querySelectorAll('#tri-live .rg').forEach(g => {
+      const act = () => { triCover = g.dataset.r; renderTri(true); };
+      g.addEventListener('click', act);
+      g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); act(); } });
+    });
+    if (focus) document.querySelector(`#tri-live .rg[data-r="${triCover}"]`).focus();
+  }
+
+  renderTri();
   newRound();
 })();
 </script>
