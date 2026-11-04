@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Zahlen sehen</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+/* Layout: one column on squared school paper (Karopapier); the block board is the hero, the "family" proves the pattern, practice closes. */
+:root{
+  --paper:#fbfcff; --grid:#e3e9f5; --ink:#1a2342; --ink-soft:#56607c;
+  --pen:#2447c9; --pen-ink:#ffffff; --card:#ffffff; --line:#cdd6ea;
+  --tile:#ecd3a4; --tile-line:#a98a55; --shade:#000000; --badge-ink:#ffffff;
+  --g1:#e2553b; --g2:#1f9588; --g3:#d99212; --g4:#7656d4; --g5:#2f80c8; --g6:#4f9d3e;
+  --ok:#1f8a4c; --no:#c2410c;
+  --display:"Bricolage Grotesque","Avenir Next","Trebuchet MS",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#17241e; --grid:#20322a; --ink:#eef4ef; --ink-soft:#a7b8ae;
+    --pen:#9db8ff; --pen-ink:#0f1830; --card:#1e2f27; --line:#33493e;
+    --tile:#d4bd8f; --tile-line:#8a7449; --shade:#000000; --badge-ink:#10201a;
+    --g1:#ff7a5f; --g2:#3cc2b2; --g3:#f5b93a; --g4:#a48bff; --g5:#5aa8ec; --g6:#7cc864;
+    --ok:#5fd08d; --no:#ff9a62; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#17241e; --grid:#20322a; --ink:#eef4ef; --ink-soft:#a7b8ae;
+  --pen:#9db8ff; --pen-ink:#0f1830; --card:#1e2f27; --line:#33493e;
+  --tile:#d4bd8f; --tile-line:#8a7449; --shade:#000000; --badge-ink:#10201a;
+  --g1:#ff7a5f; --g2:#3cc2b2; --g3:#f5b93a; --g4:#a48bff; --g5:#5aa8ec; --g6:#7cc864;
+  --ok:#5fd08d; --no:#ff9a62; color-scheme:dark;
+}
+
+body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+body{
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:20px 20px;
+  color:var(--ink); font-family:var(--body); font-size:17px; line-height:1.5;
+}
+.wrap{
+  max-width:980px; margin:0 auto; display:grid; gap:44px;
+  padding-block:28px 72px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+h1,h2{font-family:var(--display); text-wrap:balance; margin:0; line-height:1.05}
+h1{font-size:clamp(38px,7vw,58px); font-weight:800; letter-spacing:-.02em}
+h2{font-size:clamp(26px,4.5vw,34px); font-weight:750; letter-spacing:-.01em}
+p{margin:0}
+.lede{font-size:19px; color:var(--ink-soft); max-width:46ch; margin-top:10px}
+.eyebrow{font:700 13px/1 var(--body); letter-spacing:.09em; text-transform:uppercase; color:var(--pen)}
+
+/* ---------- Lab ---------- */
+.lab{
+  background:var(--card); border:1.5px solid var(--line); border-radius:22px;
+  box-shadow:5px 5px 0 var(--line);
+  padding:clamp(18px,3.5vw,32px); display:grid; gap:20px; min-width:0;
+}
+.eq{
+  display:flex; align-items:baseline; flex-wrap:wrap; gap:.25em;
+  font-family:var(--display); font-weight:750; font-size:clamp(42px,9vw,76px); line-height:1.1;
+  font-variant-numeric:tabular-nums;
+}
+.eq input{
+  font:inherit; color:var(--pen); background:transparent; border:0; border-bottom:4px solid var(--line);
+  border-radius:0; padding:0; width:4ch; text-align:center; outline:none;
+}
+.eq input:focus-visible{border-bottom-color:var(--pen)}
+.eq .op{color:var(--ink-soft); font-weight:600}
+.ans{color:var(--pen); min-width:1ch; transition:color .2s}
+.ans.wait{color:var(--ink-soft)}
+.ans small{font-size:.5em; font-weight:650; color:var(--ink-soft)}
+
+.chips{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.chips span{font-size:14px; color:var(--ink-soft); margin-right:4px}
+.chip{
+  font:600 15px/1 var(--display); font-variant-numeric:tabular-nums; color:var(--ink);
+  background:var(--paper); border:1.5px solid var(--line); border-radius:999px; padding:8px 13px; cursor:pointer;
+}
+.chip:hover{border-color:var(--pen); color:var(--pen)}
+.chip:focus-visible,.btn:focus-visible,.fam-row:focus-visible{outline:3px solid var(--pen); outline-offset:2px}
+
+.say{font-size:clamp(18px,2.6vw,21px); max-width:62ch}
+.say b{color:var(--pen); font-family:var(--display); font-weight:750}
+
+.board{
+  --s:64px;
+  display:flex; flex-wrap:wrap; align-items:flex-end; gap:6px;
+  min-height:calc(var(--s) + 48px); padding:20px 2px 6px; transition:gap .3s;
+}
+.board.grouped{gap:24px 14px}
+.grp{
+  --g:var(--ink-soft);
+  display:flex; flex-wrap:wrap; align-items:flex-end; gap:6px; position:relative; max-width:100%;
+  border:2.5px solid transparent; border-radius:14px; transition:background-color .3s,border-color .3s,padding .3s;
+}
+.board.grouped .grp{padding:16px 10px 10px; border-style:dashed; border-color:var(--line)}
+.board.grouped .grp.on{border-style:solid; border-color:var(--g); background:color-mix(in srgb,var(--g) 14%,transparent)}
+.board.grouped .grp.rest.on{border-style:dashed; border-color:var(--ink-soft); background:transparent}
+.badge{
+  position:absolute; top:-14px; left:10px; font:750 15px/1 var(--display);
+  background:var(--g); color:var(--badge-ink); padding:6px 10px; border-radius:999px;
+  opacity:0; transform:scale(.5); transition:opacity .25s,transform .25s; pointer-events:none;
+}
+.grp.on .badge{opacity:1; transform:none}
+.grp.rest .badge{background:var(--ink-soft); color:var(--card)}
+.grp.on .t{--c:var(--g); --tl:color-mix(in srgb,var(--g),#000 35%); animation:hop .4s ease-out}
+.grp.rest.on .t{--c:var(--tile); --tl:var(--tile-line); opacity:.6}
+@keyframes hop{0%{transform:none}40%{transform:translateY(-7px)}100%{transform:none}}
+
+.t{display:block; flex:none; overflow:visible}
+.t .f{fill:var(--c,var(--tile)); stroke:var(--tl,var(--tile-line)); stroke-width:1.4px; vector-effect:non-scaling-stroke; transition:fill .3s}
+.t .g{fill:none; stroke:var(--tl,var(--tile-line)); stroke-width:1px; vector-effect:non-scaling-stroke; opacity:.55}
+.t .sh1{fill:var(--shade); opacity:.12}
+.t .sh2{fill:var(--shade); opacity:.26}
+.t1{width:calc(var(--s)*.42); height:calc(var(--s)*.42)}
+.t10{width:calc(var(--s)*.16); height:var(--s)}
+.t100,.t1000{width:var(--s); height:var(--s)}
+
+.cap{display:flex; align-items:center; gap:10px; flex-wrap:wrap; color:var(--ink-soft); font-size:15px}
+.cap .key{--s:30px; display:inline-flex; align-items:center; gap:8px; padding:4px 10px 4px 6px; border:1.5px solid var(--line); border-radius:10px; background:var(--paper); color:var(--ink); font-weight:700}
+.msg{padding:18px; border:2px dashed var(--line); border-radius:14px; color:var(--ink-soft); width:100%}
+
+.controls{display:flex; flex-wrap:wrap; gap:10px}
+.btn{
+  font:700 19px/1 var(--display); border-radius:14px; padding:14px 22px; cursor:pointer;
+  border:2px solid var(--pen); background:var(--pen); color:var(--pen-ink);
+}
+.btn:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.4; cursor:not-allowed}
+.btn.ghost{background:transparent; color:var(--pen)}
+
+.result{display:grid; gap:6px; font-size:18px; min-height:5.5em}
+.result .big{font:750 clamp(22px,3.4vw,28px)/1.2 var(--display)}
+.result .same{font-size:19px}
+.result .probe{color:var(--ink-soft); font-variant-numeric:tabular-nums}
+.result.hidden > *{visibility:hidden}
+.z{color:var(--ink-soft); opacity:.5}
+
+/* ---------- Family ---------- */
+.fam-head{display:grid; gap:10px; max-width:62ch}
+.fam{display:grid; margin-top:18px; border-bottom:1.5px dashed var(--line)}
+.fam-row{
+  all:unset; box-sizing:border-box; cursor:pointer;
+  display:grid; grid-template-columns:minmax(0,15rem) minmax(0,1fr); gap:18px; align-items:center;
+  padding:16px 12px; border-top:1.5px dashed var(--line); border-radius:12px;
+}
+.fam-row:hover{background:color-mix(in srgb,var(--card) 70%,transparent)}
+.fam-row[aria-current="true"]{background:var(--card); box-shadow:0 0 0 2px var(--pen) inset}
+.fam-eq{font:750 clamp(26px,4vw,34px)/1.1 var(--display); font-variant-numeric:tabular-nums; white-space:nowrap}
+.fam-eq small{font-size:.55em; color:var(--ink-soft); font-weight:600}
+.fam-unit{display:block; font:400 14px/1.4 var(--body); color:var(--ink-soft); margin-top:4px; white-space:normal}
+.here{display:inline-block; margin-left:6px; font:700 11px/1 var(--body); letter-spacing:.08em; text-transform:uppercase; color:var(--pen)}
+.mini{--s:30px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end; min-width:0}
+.mini.small{--s:20px}
+.mini .grp{gap:3px; padding:5px; border-radius:8px; border:2px solid var(--g); background:color-mix(in srgb,var(--g) 14%,transparent)}
+.mini .grp .t{--c:var(--g); --tl:color-mix(in srgb,var(--g),#000 35%)}
+.mini .grp.rest{border:2px dashed var(--ink-soft); background:transparent}
+.mini .grp.rest .t{--c:var(--tile); --tl:var(--tile-line); opacity:.6}
+.mini .badge{display:none}
+.fam-note{margin-top:16px; font-size:18px; max-width:62ch}
+
+/* ---------- Practice ---------- */
+.practice{display:grid; gap:16px}
+.task{display:flex; flex-wrap:wrap; align-items:baseline; gap:.25em; font:750 clamp(36px,7vw,56px)/1.1 var(--display); font-variant-numeric:tabular-nums}
+.task input{
+  font:inherit; color:var(--pen); width:3.2ch; text-align:center; padding:0 4px;
+  background:var(--card); border:2.5px solid var(--line); border-radius:12px; outline:none;
+}
+.task input:focus-visible{border-color:var(--pen)}
+.fb{font-size:19px; min-height:1.6em}
+.fb.ok{color:var(--ok)} .fb.no{color:var(--no)}
+.streak{font:700 15px/1 var(--display); color:var(--ink-soft)}
+
+@media (max-width:560px){
+  .board{--s:46px}
+  .fam-row{grid-template-columns:minmax(0,1fr); gap:10px}
+  .btn{font-size:17px; padding:12px 18px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important; animation:none!important}
+}
+</style>
+
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <div class="eyebrow">Teilen mit Klötzen</div>
+    <h1>Zahlen sehen</h1>
+    <p class="lede">Teilen heißt: Wie oft passt die eine Zahl in die andere? Bau es mit Klötzen und schau zu.</p>
+  </header>
+
+  <section class="lab" aria-labelledby="lab-title">
+    <h2 id="lab-title" hidden>Rechnen mit Klötzen</h2>
+    <div class="eq">
+      <input id="a" inputmode="numeric" autocomplete="off" aria-label="Zahl, die geteilt wird" value="800">
+      <span class="op">:</span>
+      <input id="b" inputmode="numeric" autocomplete="off" aria-label="Teiler" value="200">
+      <span class="op">=</span>
+      <span class="ans wait" id="ans" aria-live="polite">?</span>
+    </div>
+
+    <div class="chips" id="chips"><span>Probier:</span></div>
+
+    <p class="say" id="say"></p>
+    <div class="board" id="board" role="img"></div>
+    <div class="cap" id="cap"></div>
+
+    <div class="controls">
+      <button class="btn" id="play" type="button">Zeig’s mir</button>
+      <button class="btn ghost" id="reset" type="button">Nochmal</button>
+    </div>
+
+    <div class="result hidden" id="result" aria-live="polite"></div>
+  </section>
+
+  <section aria-labelledby="fam-title">
+    <div class="fam-head">
+      <div class="eyebrow">Das Geheimnis</div>
+      <h2 id="fam-title">Ein Bild, vier Aufgaben</h2>
+      <p>Schau genau hin: Das Bild bleibt gleich. Nur die Klötze werden größer. Die Nullen verraten dir nur, welche Klötze du zählst.</p>
+    </div>
+    <div class="fam" id="fam"></div>
+    <p class="fam-note" id="fam-note"></p>
+  </section>
+
+  <section class="practice" aria-labelledby="pr-title">
+    <div class="eyebrow">Jetzt du</div>
+    <h2 id="pr-title">Wie oft passt es?</h2>
+    <div class="task">
+      <span id="ta"></span><span class="op">:</span><span id="tb"></span><span class="op">=</span>
+      <input id="tin" inputmode="numeric" autocomplete="off" aria-label="Deine Antwort">
+    </div>
+    <div class="controls">
+      <button class="btn" id="check" type="button">Prüfen</button>
+      <button class="btn ghost" id="tshow" type="button">Zeig’s mir</button>
+      <button class="btn ghost" id="tnew" type="button">Neue Aufgabe</button>
+    </div>
+    <p class="fb" id="fb" aria-live="polite"></p>
+    <p class="streak" id="streak"></p>
+  </section>
+
+  <footer style="color:var(--ink-soft);font-size:15px"><a href="index.html" style="color:var(--pen)">← Alle Übungen</a> · Weiter: <a href="nullen-paare.html" style="color:var(--pen)">Nullen-Paare</a></footer>
+</main>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const UNITS = [
+    {v:1000, n:'Tausender', dat:'Tausendern', one:'Tausender-Würfel', many:'Tausender-Würfel'},
+    {v:100,  n:'Hunderter', dat:'Hundertern', one:'Hunderter-Platte', many:'Hunderter-Platten'},
+    {v:10,   n:'Zehner',    dat:'Zehnern',    one:'Zehner-Stange',    many:'Zehner-Stangen'},
+    {v:1,    n:'Einer',     dat:'Einern',     one:'Einer-Würfel',     many:'Einer-Würfel'}
+  ];
+  const MAX_TILES = 120;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const PRESETS = [[8,2],[800,200],[80,20],[600,300],[900,30],[800,20],[700,200],[3000,500]];
+
+  const fmt = n => n < 10000 ? String(n) : n.toLocaleString('de-DE').replace(/\./g, ' ');
+  const zeros = n => {
+    const m = String(n).match(/^(.*?[1-9])(0*)$/);
+    return m ? m[1] + (m[2] ? `<span class="z">${m[2]}</span>` : '') : String(n);
+  };
+  const pickUnit = (a, b) => UNITS.find(u => a % u.v === 0 && b % u.v === 0);
+  const passt = c => c === 1 ? 'passt' : 'passen';
+
+  // ---------- tile drawings ----------
+  const r2 = x => Math.round(x * 100) / 100;
+  const lerp = (p, q, t) => [r2(p[0] + (q[0] - p[0]) * t), r2(p[1] + (q[1] - p[1]) * t)];
+  function gridLines(p0, p1, p2, p3, n){
+    let d = '';
+    for (let i = 1; i < n; i++){
+      const t = i / n;
+      const a = lerp(p0, p1, t), b = lerp(p3, p2, t);
+      const c = lerp(p0, p3, t), e = lerp(p1, p2, t);
+      d += `M${a[0]} ${a[1]}L${b[0]} ${b[1]}M${c[0]} ${c[1]}L${e[0]} ${e[1]}`;
+    }
+    return d;
+  }
+  const pts = arr => arr.map(p => p.join(',')).join(' ');
+  const SVG = {};
+  SVG[1] = `<svg class="t t1" viewBox="0 0 10 10" aria-hidden="true"><rect class="f" x="0.6" y="0.6" width="8.8" height="8.8" rx="1.4"/></svg>`;
+  {
+    let d = ''; for (let i = 1; i < 10; i++) d += `M0.6 ${i * 10}H9.4`;
+    SVG[10] = `<svg class="t t10" viewBox="0 0 10 100" preserveAspectRatio="none" aria-hidden="true"><rect class="f" x="0.6" y="0.6" width="8.8" height="98.8" rx="1.6"/><path class="g" d="${d}"/></svg>`;
+  }
+  SVG[100] = `<svg class="t t100" viewBox="0 0 100 100" aria-hidden="true"><rect class="f" x="0.8" y="0.8" width="98.4" height="98.4" rx="3"/><path class="g" d="${gridLines([0.8,0.8],[99.2,0.8],[99.2,99.2],[0.8,99.2],10)}"/></svg>`;
+  {
+    const T=[50,5], R=[93,28], C=[50,51], L=[7,28], LB=[7,72], CB=[50,95], RB=[93,72];
+    const top=[L,T,R,C], left=[L,C,CB,LB], right=[C,R,RB,CB];
+    SVG[1000] = `<svg class="t t1000" viewBox="0 0 100 100" aria-hidden="true">
+      <polygon class="f" points="${pts(top)}"/><polygon class="f" points="${pts(left)}"/><polygon class="f" points="${pts(right)}"/>
+      <polygon class="sh1" points="${pts(left)}"/><polygon class="sh2" points="${pts(right)}"/>
+      <path class="g" d="${gridLines(L,T,R,C,10)}${gridLines(L,C,CB,LB,10)}${gridLines(C,R,RB,CB,10)}" style="opacity:.3"/>
+    </svg>`;
+  }
+  const tiles = (n, v) => SVG[v].repeat(n);
+
+  function groupsHTML(s){
+    let h = '';
+    for (let g = 0; g < s.q; g++)
+      h += `<div class="grp" style="--g:var(--g${g % 6 + 1})"><span class="badge">${g + 1}</span>${tiles(s.cb, s.u.v)}</div>`;
+    if (s.r) h += `<div class="grp rest"><span class="badge">Rest</span>${tiles(s.r, s.u.v)}</div>`;
+    return h;
+  }
+
+  // ---------- lab ----------
+  const A = $('#a'), B = $('#b'), board = $('#board'), ans = $('#ans'), say = $('#say'),
+        cap = $('#cap'), result = $('#result'), playBtn = $('#play');
+  let state = null, timers = [];
+
+  const clean = el => { el.value = el.value.replace(/\D/g, '').replace(/^0+(?=\d)/, '').slice(0, 6); el.style.width = (Math.max(1, el.value.length) + 0.8) + 'ch'; };
+  const cancel = () => { timers.forEach(clearTimeout); timers = []; };
+
+  function solve(a, b){
+    const u = pickUnit(a, b), ca = a / u.v, cb = b / u.v;
+    return {a, b, u, ca, cb, q: Math.floor(ca / cb), r: ca % cb};
+  }
+
+  function render(){
+    cancel();
+    clean(A); clean(B);
+    const a = +A.value, b = +B.value;
+    ans.textContent = '?'; ans.className = 'ans wait'; ans.style.color = '';
+    result.classList.add('hidden'); result.innerHTML = '';
+    board.classList.remove('grouped');
+    if (!a || !b){
+      state = null; playBtn.disabled = true; say.textContent = ''; cap.innerHTML = '';
+      board.innerHTML = `<div class="msg">Schreib oben zwei Zahlen hin, die größer als 0 sind.</div>`;
+      renderFamily(); return;
+    }
+    const s = state = solve(a, b), u = s.u;
+    if (s.ca > MAX_TILES){
+      playBtn.disabled = true;
+      say.innerHTML = `${fmt(a)} sind <b>${fmt(s.ca)}</b> ${u.n}.`;
+      board.innerHTML = `<div class="msg">Das wären ${fmt(s.ca)} Klötze. So viele passen nicht aufs Blatt. Probier Zahlen, die auf Nullen enden, zum Beispiel ${fmt(a * 100)} : ${fmt(b * 100)}.</div>`;
+      cap.innerHTML = ''; renderFamily(); return;
+    }
+    playBtn.disabled = false;
+    say.innerHTML = u.v === 1
+      ? `Jeder Würfel ist <b>1</b>. Wie oft ${passt(b)} <b>${fmt(b)}</b> in <b>${fmt(a)}</b>?`
+      : `${fmt(a)} sind <b>${s.ca} ${u.n}</b>. ${fmt(b)} sind <b>${s.cb} ${u.n}</b>. Wie oft ${passt(s.cb)} ${s.cb} ${u.n} in ${s.ca} ${u.n}?`;
+    board.innerHTML = groupsHTML(s);
+    board.setAttribute('aria-label', `${s.ca} ${s.ca === 1 ? u.one : u.many}`);
+    cap.innerHTML = `<span class="key">${SVG[u.v]} = ${fmt(u.v)}</span><span>${s.ca} ${s.ca === 1 ? u.one : u.many} sind ${fmt(a)}.</span>`;
+    renderFamily();
+  }
+
+  function play(){
+    if (!state) return;
+    render();
+    const s = state;
+    board.classList.add('grouped');
+    const groups = [...board.querySelectorAll('.grp')];
+    const n = groups.length;
+    const step = reduce ? 0 : Math.max(140, Math.min(650, 4200 / Math.max(n, 1)));
+    const start = reduce ? 0 : 450;
+    groups.forEach((el, i) => timers.push(setTimeout(() => {
+      el.classList.add('on');
+      if (!el.classList.contains('rest')){
+        ans.className = 'ans'; ans.textContent = i + 1; ans.style.color = `var(--g${i % 6 + 1})`;
+      }
+    }, start + i * step)));
+    timers.push(setTimeout(() => showResult(s), start + n * step + (reduce ? 0 : 250)));
+  }
+
+  function showResult(s){
+    const u = s.u;
+    ans.className = 'ans'; ans.style.color = '';
+    ans.innerHTML = s.r ? `${s.q} <small>Rest ${fmt(s.r * u.v)}</small>` : String(s.q);
+    let h = '';
+    if (s.q === 0){
+      h += `<div class="big">${fmt(s.b)} ist größer als ${fmt(s.a)}. Es passt 0-mal hinein.</div>`;
+    } else if (u.v === 1){
+      h += `<div class="big">${fmt(s.b)} ${passt(s.b)} ${s.q}-mal in ${fmt(s.a)}${s.r ? `, und ${s.r} ${s.r === 1 ? 'bleibt' : 'bleiben'} übrig` : ''}.</div>`;
+    } else {
+      h += `<div class="big">${s.cb} ${u.n} ${passt(s.cb)} ${s.q}-mal in ${s.ca} ${u.n}${s.r ? `, und ${s.r} ${u.n} ${s.r === 1 ? 'bleibt' : 'bleiben'} übrig` : ''}.</div>`;
+      h += `<div class="same">Das ist genau wie <b>${s.ca} : ${s.cb} = ${s.q}${s.r ? ' Rest ' + s.r : ''}</b>. Nur mit ${u.dat} statt mit Einern.</div>`;
+    }
+    h += `<div class="probe">Probe: ${s.q} · ${fmt(s.b)} = ${fmt(s.q * s.b)}${s.r ? ` und ${fmt(s.q * s.b)} + ${fmt(s.r * u.v)} = ${fmt(s.a)}` : ''}</div>`;
+    result.innerHTML = h;
+    result.classList.remove('hidden');
+  }
+
+  function load(a, b, autoplay){
+    A.value = a; B.value = b; render();
+    if (autoplay) setTimeout(play, reduce ? 0 : 350);
+  }
+
+  // ---------- family ----------
+  function renderFamily(){
+    const fam = $('#fam'), note = $('#fam-note');
+    if (!state || state.ca > MAX_TILES){ fam.innerHTML = ''; note.textContent = 'Wähl oben eine Aufgabe, dann erscheint hier ihre Familie.'; return; }
+    const s = state;
+    const rows = [1, 10, 100, 1000].map(v => {
+      const u = UNITS.find(x => x.v === v);
+      const t = {a: s.ca * v, b: s.cb * v, u, ca: s.ca, cb: s.cb, q: s.q, r: s.r};
+      const cur = v === s.u.v;
+      const res = `${s.q}${s.r ? ` <small>Rest ${zeros(s.r * v)}</small>` : ''}`;
+      return `<button class="fam-row" type="button" data-a="${t.a}" data-b="${t.b}" aria-current="${cur}">
+        <div class="fam-eq">${zeros(t.a)} : ${zeros(t.b)} = ${res}
+          <span class="fam-unit">gezählt in ${u.dat}${cur ? '<span class="here">oben</span>' : ''}</span></div>
+        <div class="mini${s.ca > 24 ? ' small' : ''}" aria-hidden="true">${groupsHTML(t)}</div>
+      </button>`;
+    });
+    fam.innerHTML = rows.join('');
+    note.innerHTML = `Bei allen vier ist das Bild gleich: ${s.ca} Klötze, immer ${s.cb} zusammen. Darum ist das Ergebnis immer <b>${s.q}</b>${s.r ? ' (mit Rest)' : ''}.`;
+  }
+  $('#fam').addEventListener('click', e => {
+    const row = e.target.closest('.fam-row'); if (!row) return;
+    load(row.dataset.a, row.dataset.b, true);
+    document.querySelector('.lab').scrollIntoView({behavior: reduce ? 'auto' : 'smooth', block: 'start'});
+  });
+
+  // ---------- practice ----------
+  const rand = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  let task = null, right = 0, tries = 0;
+  function newTask(){
+    let a, b, q;
+    do {
+      if (Math.random() < 0.25){
+        let bb = rand(2, 4), qq = rand(2, Math.floor(9 / bb)), u = pick([10, 100]);
+        a = bb * qq * u * 10; b = bb * u; q = qq * 10;
+      } else {
+        let bb = rand(2, 9), qq = rand(2, Math.max(2, Math.floor(24 / bb))), u = pick([1, 10, 100, 100, 1000, 1000]);
+        a = bb * qq * u; b = bb * u; q = qq;
+      }
+    } while (task && task.a === a && task.b === b);
+    task = {a, b, q};
+    $('#ta').textContent = fmt(a); $('#tb').textContent = fmt(b);
+    const tin = $('#tin'); tin.value = ''; tin.style.width = '3.2ch';
+    const fb = $('#fb'); fb.textContent = ''; fb.className = 'fb';
+  }
+  function check(){
+    const tin = $('#tin'), fb = $('#fb');
+    const v = parseInt(tin.value.replace(/\D/g, ''), 10);
+    if (isNaN(v)){ fb.className = 'fb'; fb.textContent = 'Schreib zuerst deine Antwort ins Kästchen.'; tin.focus(); return; }
+    tries++;
+    const s = solve(task.a, task.b);
+    if (v === task.q){
+      right++;
+      fb.className = 'fb ok';
+      fb.textContent = s.u.v === 1
+        ? `Richtig! ${fmt(task.b)} passt ${task.q}-mal in ${fmt(task.a)}.`
+        : `Richtig! ${fmt(task.a)} sind ${s.ca} ${s.u.n}, ${fmt(task.b)} sind ${s.cb} ${s.u.n}. Und ${s.ca} : ${s.cb} = ${task.q}.`;
+    } else {
+      fb.className = 'fb no';
+      fb.textContent = 'Noch nicht. Tipp auf „Zeig’s mir“ und zähl die Gruppen mit.';
+    }
+    $('#streak').textContent = `${right} von ${tries} richtig`;
+  }
+  $('#tin').addEventListener('input', e => { const el = e.target; el.value = el.value.replace(/\D/g, '').slice(0, 5); el.style.width = Math.max(3.2, el.value.length + 1.2) + 'ch'; });
+  $('#tin').addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+  $('#check').addEventListener('click', check);
+  $('#tnew').addEventListener('click', () => { newTask(); $('#tin').focus(); });
+  $('#tshow').addEventListener('click', () => {
+    load(task.a, task.b, true);
+    document.querySelector('.lab').scrollIntoView({behavior: reduce ? 'auto' : 'smooth', block: 'start'});
+  });
+
+  // ---------- wiring ----------
+  const chips = $('#chips');
+  PRESETS.forEach(([a, b]) => {
+    const c = document.createElement('button');
+    c.type = 'button'; c.className = 'chip'; c.textContent = `${fmt(a)} : ${fmt(b)}`;
+    c.addEventListener('click', () => load(a, b, true));
+    chips.appendChild(c);
+  });
+  let deb;
+  [A, B].forEach(el => {
+    el.addEventListener('input', () => { clean(el); clearTimeout(deb); deb = setTimeout(render, 250); });
+    el.addEventListener('keydown', e => { if (e.key === 'Enter'){ clearTimeout(deb); play(); } });
+  });
+  playBtn.addEventListener('click', play);
+  $('#reset').addEventListener('click', render);
+
+  render();
+  newTask();
+})();
+</script>
+</body>
+</html>

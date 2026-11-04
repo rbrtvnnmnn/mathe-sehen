@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nullen-Paare</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+/* Layout: same Karopapier world as "Zahlen sehen". Hero = tappable equation where zeros are struck in pairs; then the zero trap; then a 10-task round. */
+:root{
+  --paper:#fbfcff; --grid:#e3e9f5; --ink:#1a2342; --ink-soft:#56607c;
+  --pen:#2447c9; --pen-ink:#ffffff; --card:#ffffff; --line:#cdd6ea;
+  --tile:#ecd3a4; --tile-line:#a98a55; --shade:#000000; --badge-ink:#ffffff;
+  --g1:#e2553b; --g2:#1f9588; --g3:#d99212; --g4:#7656d4; --g5:#2f80c8; --g6:#4f9d3e;
+  --ok:#1f8a4c; --no:#c2410c;
+  --display:"Bricolage Grotesque","Avenir Next","Trebuchet MS",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#17241e; --grid:#20322a; --ink:#eef4ef; --ink-soft:#a7b8ae;
+    --pen:#9db8ff; --pen-ink:#0f1830; --card:#1e2f27; --line:#33493e;
+    --tile:#d4bd8f; --tile-line:#8a7449; --shade:#000000; --badge-ink:#10201a;
+    --g1:#ff7a5f; --g2:#3cc2b2; --g3:#f5b93a; --g4:#a48bff; --g5:#5aa8ec; --g6:#7cc864;
+    --ok:#5fd08d; --no:#ff9a62; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#17241e; --grid:#20322a; --ink:#eef4ef; --ink-soft:#a7b8ae;
+  --pen:#9db8ff; --pen-ink:#0f1830; --card:#1e2f27; --line:#33493e;
+  --tile:#d4bd8f; --tile-line:#8a7449; --shade:#000000; --badge-ink:#10201a;
+  --g1:#ff7a5f; --g2:#3cc2b2; --g3:#f5b93a; --g4:#a48bff; --g5:#5aa8ec; --g6:#7cc864;
+  --ok:#5fd08d; --no:#ff9a62; color-scheme:dark;
+}
+
+body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+body{
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:20px 20px;
+  color:var(--ink); font-family:var(--body); font-size:17px; line-height:1.5;
+}
+.wrap{
+  max-width:980px; margin:0 auto; display:grid; gap:48px;
+  padding-block:28px 72px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+h1,h2,h3{font-family:var(--display); text-wrap:balance; margin:0; line-height:1.05}
+h1{font-size:clamp(38px,7vw,58px); font-weight:800; letter-spacing:-.02em}
+h2{font-size:clamp(26px,4.5vw,34px); font-weight:750; letter-spacing:-.01em}
+h3{font-size:24px; font-weight:750}
+p{margin:0}
+.lede{font-size:19px; color:var(--ink-soft); max-width:50ch; margin-top:10px}
+.eyebrow{font:700 13px/1 var(--body); letter-spacing:.09em; text-transform:uppercase; color:var(--pen)}
+.sec-head{display:grid; gap:10px; max-width:62ch}
+.card{
+  background:var(--card); border:1.5px solid var(--line); border-radius:22px;
+  box-shadow:5px 5px 0 var(--line); padding:clamp(18px,3.5vw,32px); min-width:0;
+}
+.lab{display:grid; gap:20px}
+
+/* ---------- equation with tappable zeros ---------- */
+.eq{
+  display:flex; align-items:baseline; flex-wrap:wrap; gap:.28em;
+  font-family:var(--display); font-weight:750; font-size:clamp(46px,10vw,84px); line-height:1.15;
+  font-variant-numeric:tabular-nums;
+}
+.num{display:inline-flex; align-items:baseline}
+.d{display:inline-block; min-width:.62em; text-align:center}
+.zero{
+  font:inherit; color:var(--pen); background:transparent; border:0; padding:0 .02em; margin:0;
+  border-radius:.14em; cursor:pointer; position:relative; line-height:inherit;
+  text-decoration:underline dotted .06em; text-underline-offset:.12em;
+}
+.zero:hover{background:color-mix(in srgb,var(--pen) 10%,transparent)}
+.zero:focus-visible{outline:3px solid var(--pen); outline-offset:2px}
+.zero.sel{background:color-mix(in srgb,var(--pen) 18%,transparent); animation:pulse 1s ease-in-out infinite}
+.zero.x{color:var(--ink-soft); opacity:.55; text-decoration:none; cursor:default}
+.zero.x::after{
+  content:""; position:absolute; left:-8%; right:-8%; top:52%; height:.1em; border-radius:.05em;
+  background:var(--strike,var(--pen)); transform:rotate(-38deg);
+}
+@keyframes pulse{50%{background:color-mix(in srgb,var(--pen) 32%,transparent)}}
+.op{color:var(--ink-soft); font-weight:600}
+.ans{color:var(--pen); min-width:1ch}
+.ans.wait{color:var(--ink-soft)}
+.ans small{font-size:.5em; color:var(--ink-soft)}
+
+.hint{font-size:clamp(18px,2.6vw,21px); max-width:62ch; min-height:1.6em}
+.hint b{color:var(--pen); font-family:var(--display); font-weight:750}
+.hint.warn{color:var(--no)}
+
+.ladder{list-style:none; margin:0; padding:0; display:grid; gap:6px}
+.ladder li{display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 14px; padding:8px 12px; border-radius:10px; border:1.5px dashed var(--line)}
+.ladder li.now{border-style:solid; border-color:var(--pen); background:color-mix(in srgb,var(--pen) 6%,transparent)}
+.lad-eq{font:750 22px/1.2 var(--display); font-variant-numeric:tabular-nums; min-width:8ch}
+.lad-u{color:var(--ink-soft); font-size:15px}
+
+/* ---------- blocks ---------- */
+.board{
+  --s:56px;
+  display:flex; flex-wrap:wrap; align-items:flex-end; gap:6px;
+  min-height:calc(var(--s) + 40px); padding:18px 2px 6px;
+}
+.board.grouped{gap:22px 12px}
+.grp{
+  --g:var(--ink-soft);
+  display:flex; flex-wrap:wrap; align-items:flex-end; gap:5px; position:relative; max-width:100%;
+  border:2.5px solid transparent; border-radius:14px; transition:background-color .3s,border-color .3s;
+}
+.board.grouped .grp{padding:14px 8px 8px; border-style:dashed; border-color:var(--line)}
+.board.grouped .grp.on{border-style:solid; border-color:var(--g); background:color-mix(in srgb,var(--g) 14%,transparent)}
+.board.grouped .grp.rest.on{border-style:dashed; border-color:var(--ink-soft); background:transparent}
+.badge{
+  position:absolute; top:-13px; left:8px; font:750 14px/1 var(--display);
+  background:var(--g); color:var(--badge-ink); padding:5px 9px; border-radius:999px;
+  opacity:0; transform:scale(.5); transition:opacity .25s,transform .25s; pointer-events:none;
+}
+.grp.on .badge{opacity:1; transform:none}
+.grp.rest .badge{background:var(--ink-soft); color:var(--card)}
+.grp.on .t{--c:var(--g); --tl:color-mix(in srgb,var(--g),#000 35%); animation:hop .4s ease-out}
+.grp.rest.on .t{--c:var(--tile); --tl:var(--tile-line); opacity:.6}
+@keyframes hop{40%{transform:translateY(-7px)}}
+
+.t{display:block; flex:none; overflow:visible}
+.t .f{fill:var(--c,var(--tile)); stroke:var(--tl,var(--tile-line)); stroke-width:1.4px; vector-effect:non-scaling-stroke}
+.t .g{fill:none; stroke:var(--tl,var(--tile-line)); stroke-width:1px; vector-effect:non-scaling-stroke; opacity:.55}
+.t .sh1{fill:var(--shade); opacity:.12}
+.t .sh2{fill:var(--shade); opacity:.26}
+.t1{width:calc(var(--s)*.42); height:calc(var(--s)*.42)}
+.t10{width:calc(var(--s)*.16); height:var(--s)}
+.t100,.t1000{width:var(--s); height:var(--s)}
+.msg{padding:16px; border:2px dashed var(--line); border-radius:14px; color:var(--ink-soft); width:100%}
+.cap{display:flex; align-items:center; gap:10px; flex-wrap:wrap; color:var(--ink-soft); font-size:15px}
+.key{--s:28px; display:inline-flex; align-items:center; gap:8px; padding:4px 10px 4px 6px; border:1.5px solid var(--line); border-radius:10px; background:var(--paper); color:var(--ink); font-weight:700}
+
+.controls{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+.btn{
+  font:700 19px/1 var(--display); border-radius:14px; padding:14px 22px; cursor:pointer;
+  border:2px solid var(--pen); background:var(--pen); color:var(--pen-ink);
+}
+.btn:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.4; cursor:not-allowed}
+.btn.ghost{background:transparent; color:var(--pen)}
+.btn:focus-visible,.chip:focus-visible{outline:3px solid var(--pen); outline-offset:2px}
+
+.chips{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.chips .lbl{font-size:14px; color:var(--ink-soft); margin-right:4px}
+.chip{
+  font:600 15px/1 var(--display); font-variant-numeric:tabular-nums; color:var(--ink);
+  background:var(--paper); border:1.5px solid var(--line); border-radius:999px; padding:8px 13px; cursor:pointer;
+}
+.chip:hover{border-color:var(--pen); color:var(--pen)}
+.own{display:flex; flex-wrap:wrap; gap:8px; align-items:center; font:700 18px/1 var(--display)}
+.own input{
+  font:inherit; width:6ch; padding:7px 8px; text-align:center; color:var(--ink);
+  background:var(--paper); border:1.5px solid var(--line); border-radius:10px;
+}
+.own input:focus-visible{outline:3px solid var(--pen); outline-offset:1px}
+.own .btn{font-size:15px; padding:9px 14px}
+
+.result{display:grid; gap:6px; font-size:18px; min-height:4.5em}
+.result .big{font:750 clamp(22px,3.4vw,28px)/1.2 var(--display)}
+.result .probe{color:var(--ok); font-weight:700; font-variant-numeric:tabular-nums}
+.result.hidden > *{visibility:hidden}
+
+/* ---------- trap ---------- */
+.trap{display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); gap:18px; align-items:stretch; margin-top:18px}
+.trap-box{background:var(--card); border:1.5px solid var(--line); border-radius:18px; padding:18px; display:grid; gap:12px; align-content:start; min-width:0}
+.trap-box h3{font-variant-numeric:tabular-nums}
+.trap-box.bad h3{color:var(--no)}
+.trap-box p{color:var(--ink-soft); font-size:16px}
+.neq{align-self:center; font:800 52px/1 var(--display); color:var(--no)}
+.mini{--s:34px; display:flex; flex-wrap:wrap; gap:7px; align-items:flex-end}
+.mini .grp{gap:3px; padding:5px; border-radius:8px; border:2px solid var(--g); background:color-mix(in srgb,var(--g) 14%,transparent)}
+.mini .grp .t{--c:var(--g); --tl:color-mix(in srgb,var(--g),#000 35%)}
+.mini .badge{display:none}
+.trap-fix{margin-top:18px; font-size:19px; max-width:62ch}
+.trap-fix b{font-family:var(--display)}
+.trap-fix .ok{color:var(--ok); font-weight:700}
+
+/* ---------- quiz ---------- */
+.quiz{display:grid; gap:18px}
+.qtop{display:flex; justify-content:space-between; gap:12px; font:700 15px/1 var(--display); color:var(--ink-soft)}
+.bar{height:8px; border-radius:99px; background:var(--line); overflow:hidden}
+.bar i{display:block; height:100%; width:0; background:var(--pen); border-radius:99px; transition:width .3s}
+.task{display:flex; flex-wrap:wrap; align-items:baseline; gap:.25em; font:750 clamp(36px,7vw,56px)/1.1 var(--display); font-variant-numeric:tabular-nums}
+.task input{
+  font:inherit; color:var(--pen); width:3.4ch; text-align:center; padding:0 4px;
+  background:var(--paper); border:2.5px solid var(--line); border-radius:12px; outline:none;
+}
+.task input:focus-visible{border-color:var(--pen)}
+.fb{font-size:19px; min-height:1.6em; max-width:62ch}
+.fb.ok{color:var(--ok)} .fb.no{color:var(--no)}
+.done{font:750 clamp(28px,5vw,40px)/1.15 var(--display)}
+
+footer{color:var(--ink-soft); font-size:15px}
+footer a{color:var(--pen)}
+
+@media (max-width:640px){
+  .trap{grid-template-columns:minmax(0,1fr)}
+  .neq{justify-self:center; font-size:40px}
+  .board{--s:44px}
+  .btn{font-size:17px; padding:12px 18px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important; animation:none!important}
+}
+</style>
+
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <div class="eyebrow">Teilen mit Nullen</div>
+    <h1>Nullen-Paare</h1>
+    <p class="lede">Nullen darfst du streichen, aber nur im Paar: eine links, eine rechts. Jedes Paar macht die Klötze 10-mal größer.</p>
+  </header>
+
+  <section class="card lab" aria-label="Nullen streichen">
+    <div class="eq" id="eq"></div>
+    <p class="hint" id="hint" aria-live="polite"></p>
+    <ol class="ladder" id="ladder"></ol>
+    <div class="board" id="board" role="img"></div>
+    <div class="cap" id="cap"></div>
+    <div class="controls">
+      <button class="btn" id="play" type="button">Zeig’s mir</button>
+      <button class="btn ghost" id="reset" type="button">Von vorn</button>
+    </div>
+    <div class="result hidden" id="result" aria-live="polite"></div>
+    <div class="chips" id="chips"><span class="lbl">Probier:</span></div>
+    <div class="own">
+      <input id="oa" inputmode="numeric" autocomplete="off" aria-label="Eigene Zahl links" value="6000">
+      <span>:</span>
+      <input id="ob" inputmode="numeric" autocomplete="off" aria-label="Eigene Zahl rechts" value="30">
+      <button class="btn ghost" id="oload" type="button">Eigene Aufgabe</button>
+    </div>
+  </section>
+
+  <section aria-labelledby="trap-title">
+    <div class="sec-head">
+      <div class="eyebrow">Aufgepasst</div>
+      <h2 id="trap-title">Die Nullen-Falle</h2>
+      <p>Bei 800 : 20 ist es verlockend, alle Nullen wegzustreichen. Dann kommt 8 : 2 = 4 heraus. Die Probe zeigt, dass das nicht stimmen kann.</p>
+    </div>
+    <div class="trap">
+      <div class="trap-box bad">
+        <h3>Probe: 4 · 20 = 80</h3>
+        <div class="mini" id="trap-a" aria-hidden="true"></div>
+        <p>4 Gruppen mit je 2 Zehner-Stangen. Das sind nur 80.</p>
+      </div>
+      <div class="neq" aria-label="ist nicht gleich">≠</div>
+      <div class="trap-box">
+        <h3>Aufgabe: 800</h3>
+        <div class="mini" id="trap-b" aria-hidden="true"></div>
+        <p>So viel muss herauskommen: 8 Hunderter-Platten.</p>
+      </div>
+    </div>
+    <p class="trap-fix">Richtig ist: Nur <b>ein</b> Paar streichen. 800 : 20 wird zu <b>80 : 2 = 40</b>.<br><span class="ok">Probe: 40 · 20 = 800 ✓</span></p>
+  </section>
+
+  <section class="card quiz" aria-labelledby="q-title">
+    <div class="eyebrow">Jetzt du</div>
+    <h2 id="q-title">10 Aufgaben mit Nullen</h2>
+    <div>
+      <div class="qtop"><span id="qpos"></span><span id="qscore"></span></div>
+      <div class="bar" style="margin-top:8px"><i id="qbar"></i></div>
+    </div>
+    <div id="qbody">
+      <div class="task">
+        <span id="ta"></span><span class="op">:</span><span id="tb"></span><span class="op">=</span>
+        <input id="tin" inputmode="numeric" autocomplete="off" aria-label="Deine Antwort">
+      </div>
+    </div>
+    <div class="controls" id="qctl">
+      <button class="btn" id="qcheck" type="button">Prüfen</button>
+      <button class="btn ghost" id="qshow" type="button">Zeig’s mir</button>
+    </div>
+    <p class="fb" id="fb" aria-live="polite"></p>
+  </section>
+
+  <footer><a href="index.html">← Alle Übungen</a> · Teil 1: <a href="zahlen-sehen.html">Zahlen sehen</a></footer>
+</main>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const UNITS = [
+    {v:1,     n:'Einer',          dat:'Einern',          one:'Einer-Würfel',     many:'Einer-Würfel'},
+    {v:10,    n:'Zehner',         dat:'Zehnern',         one:'Zehner-Stange',    many:'Zehner-Stangen'},
+    {v:100,   n:'Hunderter',      dat:'Hundertern',      one:'Hunderter-Platte', many:'Hunderter-Platten'},
+    {v:1000,  n:'Tausender',      dat:'Tausendern',      one:'Tausender-Würfel', many:'Tausender-Würfel'},
+    {v:10000, n:'Zehntausender',  dat:'Zehntausendern'},
+    {v:100000,n:'Hunderttausender',dat:'Hunderttausendern'}
+  ];
+  const MAX_TILES = 120;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const PRESETS = [[800,20],[800,200],[600,30],[9000,300],[4000,500],[1200,40],[2000,50]];
+  const fmt = n => n < 10000 ? String(n) : n.toLocaleString('de-DE').replace(/\./g, ' ');
+  const tz = n => { const s = String(n); return s.length - s.replace(/0+$/, '').length; };
+  const passt = c => c === 1 ? 'passt' : 'passen';
+  const P10 = k => Math.pow(10, k);
+
+  // ---------- tile drawings ----------
+  const r2 = x => Math.round(x * 100) / 100;
+  const lerp = (p, q, t) => [r2(p[0] + (q[0] - p[0]) * t), r2(p[1] + (q[1] - p[1]) * t)];
+  function gridLines(p0, p1, p2, p3, n){
+    let d = '';
+    for (let i = 1; i < n; i++){
+      const t = i / n, a = lerp(p0, p1, t), b = lerp(p3, p2, t), c = lerp(p0, p3, t), e = lerp(p1, p2, t);
+      d += `M${a[0]} ${a[1]}L${b[0]} ${b[1]}M${c[0]} ${c[1]}L${e[0]} ${e[1]}`;
+    }
+    return d;
+  }
+  const pts = arr => arr.map(p => p.join(',')).join(' ');
+  const SVG = {};
+  SVG[1] = `<svg class="t t1" viewBox="0 0 10 10" aria-hidden="true"><rect class="f" x="0.6" y="0.6" width="8.8" height="8.8" rx="1.4"/></svg>`;
+  { let d = ''; for (let i = 1; i < 10; i++) d += `M0.6 ${i * 10}H9.4`;
+    SVG[10] = `<svg class="t t10" viewBox="0 0 10 100" preserveAspectRatio="none" aria-hidden="true"><rect class="f" x="0.6" y="0.6" width="8.8" height="98.8" rx="1.6"/><path class="g" d="${d}"/></svg>`; }
+  SVG[100] = `<svg class="t t100" viewBox="0 0 100 100" aria-hidden="true"><rect class="f" x="0.8" y="0.8" width="98.4" height="98.4" rx="3"/><path class="g" d="${gridLines([0.8,0.8],[99.2,0.8],[99.2,99.2],[0.8,99.2],10)}"/></svg>`;
+  { const T=[50,5], R=[93,28], C=[50,51], L=[7,28], LB=[7,72], CB=[50,95], RB=[93,72];
+    const top=[L,T,R,C], left=[L,C,CB,LB], right=[C,R,RB,CB];
+    SVG[1000] = `<svg class="t t1000" viewBox="0 0 100 100" aria-hidden="true"><polygon class="f" points="${pts(top)}"/><polygon class="f" points="${pts(left)}"/><polygon class="f" points="${pts(right)}"/><polygon class="sh1" points="${pts(left)}"/><polygon class="sh2" points="${pts(right)}"/><path class="g" style="opacity:.3" d="${gridLines(L,T,R,C,10)}${gridLines(L,C,CB,LB,10)}${gridLines(C,R,RB,CB,10)}"/></svg>`; }
+  const tiles = (n, v) => SVG[v].repeat(n);
+  function groupsHTML(cb, q, r, v){
+    let h = '';
+    for (let g = 0; g < q; g++) h += `<div class="grp" style="--g:var(--g${g % 6 + 1})"><span class="badge">${g + 1}</span>${tiles(cb, v)}</div>`;
+    if (r) h += `<div class="grp rest"><span class="badge">Rest</span>${tiles(r, v)}</div>`;
+    return h;
+  }
+
+  // ---------- lab ----------
+  const eq = $('#eq'), hint = $('#hint'), ladder = $('#ladder'), board = $('#board'), cap = $('#cap'),
+        result = $('#result'), playBtn = $('#play');
+  let L = {a:800, b:20, pairs:0, sel:null}, timers = [];
+  const cancel = () => { timers.forEach(clearTimeout); timers = []; };
+  const maxPairs = () => Math.min(tz(L.a), tz(L.b));
+  const left = side => tz(L[side]) - L.pairs;
+
+  function numHTML(n, side){
+    const s = String(n), z = tz(n);
+    let h = '<span class="num">';
+    for (let i = 0; i < s.length; i++){
+      const fr = s.length - 1 - i;
+      if (fr < z){
+        const struck = fr < L.pairs;
+        const sel = !struck && L.sel === side && fr === L.pairs;
+        h += `<button type="button" class="d zero${struck ? ' x' : ''}${sel ? ' sel' : ''}" data-side="${side}"${struck ? ` disabled style="--strike:var(--g${fr % 6 + 1})"` : ''} aria-label="${struck ? 'gestrichene Null' : 'Null streichen'}">0</button>`;
+      } else h += `<span class="d">${s[i]}</span>`;
+    }
+    return h + '</span>';
+  }
+
+  function current(){
+    const k = L.pairs, ca = L.a / P10(k), cb = L.b / P10(k);
+    return {k, ca, cb, u: UNITS[k], q: Math.floor(ca / cb), r: ca % cb};
+  }
+
+  function renderLab(msg, warn){
+    cancel();
+    const c = current();
+    eq.innerHTML = `${numHTML(L.a, 'a')}<span class="op">:</span>${numHTML(L.b, 'b')}<span class="op">=</span><span class="ans wait" id="ans">?</span>`;
+
+    // hint
+    const mp = maxPairs();
+    let h;
+    if (msg) h = msg;
+    else if (L.sel) h = `Gut. Jetzt eine Null auf der <b>anderen Seite</b>.`;
+    else if (mp === 0) h = `Hier gibt es kein Nullen-Paar. Wie oft ${passt(c.cb)} <b>${fmt(c.cb)}</b> in <b>${fmt(c.ca)}</b>?`;
+    else if (L.pairs === 0) h = `Tipp eine blaue Null an. Dann eine Null auf der anderen Seite.`;
+    else if (L.pairs < mp) h = `Ein Paar ist weg. Es gibt noch ein Paar.`;
+    else {
+      const rest = left('a');
+      h = `Keine Paare mehr. ` + (rest > 0
+        ? `Bei <b>${fmt(c.ca)}</b> ${rest === 1 ? 'bleibt eine Null' : `bleiben ${rest} Nullen`} stehen. Die ${rest === 1 ? 'gehört' : 'gehören'} dazu! `
+        : '') + `Wie oft ${passt(c.cb)} <b>${fmt(c.cb)}</b> in <b>${fmt(c.ca)}</b>?`;
+    }
+    hint.innerHTML = h;
+    hint.classList.toggle('warn', !!warn);
+
+    // ladder
+    let lh = '';
+    for (let k = 0; k <= L.pairs; k++){
+      const u = UNITS[k];
+      const note = k === 0 ? 'gezählt in Einern' : `${k}. Paar gestrichen: gezählt in ${u.dat}`;
+      lh += `<li class="${k === L.pairs ? 'now' : ''}"><span class="lad-eq">${fmt(L.a / P10(k))} : ${fmt(L.b / P10(k))}</span><span class="lad-u">${note}</span></li>`;
+    }
+    ladder.innerHTML = lh;
+
+    // picture
+    board.classList.remove('grouped');
+    result.classList.add('hidden'); result.innerHTML = '';
+    if (SVG[c.u.v] && c.ca <= MAX_TILES){
+      board.innerHTML = groupsHTML(c.cb, c.q, c.r, c.u.v);
+      board.setAttribute('aria-label', `${c.ca} ${c.u.many}`);
+      cap.innerHTML = `<span class="key">${SVG[c.u.v]} = ${fmt(c.u.v)}</span><span>${c.ca} ${c.ca === 1 ? c.u.one : c.u.many} sind ${fmt(L.a)}.</span>`;
+      playBtn.disabled = false;
+    } else {
+      board.innerHTML = `<div class="msg">${fmt(c.ca)} ${c.u.many || c.u.n} sind zu viele zum Malen.${L.pairs < mp ? ' Streich ein Nullen-Paar, dann werden die Klötze größer und es werden weniger.' : ' Rechne im Kopf weiter oder probier eine andere Aufgabe.'}</div>`;
+      board.setAttribute('aria-label', 'zu viele Klötze');
+      cap.innerHTML = '';
+      playBtn.disabled = true;
+    }
+  }
+
+  eq.addEventListener('click', e => {
+    const z = e.target.closest('.zero');
+    if (!z || z.disabled) return;
+    const side = z.dataset.side, other = side === 'a' ? 'b' : 'a';
+    if (L.sel === side){ L.sel = null; renderLab(); return; }
+    if (L.sel === other){ L.pairs++; L.sel = null; renderLab(); return; }
+    if (left(other) <= 0){
+      renderLab(`Die ${fmt(L[other] / P10(L.pairs))} hat keine Null mehr. Ohne Partner darf diese Null nicht weg.`, true);
+      return;
+    }
+    L.sel = side; renderLab();
+  });
+
+  function play(){
+    const c = current();
+    if (!SVG[c.u.v] || c.ca > MAX_TILES) return;
+    renderLab();
+    board.classList.add('grouped');
+    const ans = $('#ans');
+    const groups = [...board.querySelectorAll('.grp')], n = groups.length;
+    const step = reduce ? 0 : Math.max(110, Math.min(650, 4200 / Math.max(n, 1)));
+    const start = reduce ? 0 : 400;
+    groups.forEach((el, i) => timers.push(setTimeout(() => {
+      el.classList.add('on');
+      if (!el.classList.contains('rest')){ ans.className = 'ans'; ans.textContent = i + 1; ans.style.color = `var(--g${i % 6 + 1})`; }
+    }, start + i * step)));
+    timers.push(setTimeout(() => showResult(c), start + n * step + (reduce ? 0 : 250)));
+  }
+
+  function showResult(c){
+    const ans = $('#ans');
+    ans.className = 'ans'; ans.style.color = '';
+    ans.innerHTML = c.r ? `${c.q} <small>Rest ${fmt(c.r * c.u.v)}</small>` : String(c.q);
+    let h = c.u.v === 1
+      ? `<div class="big">${fmt(c.cb)} ${passt(c.cb)} ${c.q}-mal in ${fmt(c.ca)}.</div>`
+      : `<div class="big">${c.cb} ${c.u.n} ${passt(c.cb)} ${c.q}-mal in ${c.ca} ${c.u.n}. Also ${fmt(L.a)} : ${fmt(L.b)} = ${c.q}${c.r ? ' Rest ' + fmt(c.r * c.u.v) : ''}.</div>`;
+    h += `<div class="probe">Probe: ${fmt(c.q)} · ${fmt(L.b)} = ${fmt(c.q * L.b)}${c.r ? ` + ${fmt(c.r * c.u.v)} = ${fmt(L.a)}` : ''} ✓</div>`;
+    result.innerHTML = h;
+    result.classList.remove('hidden');
+  }
+
+  function load(a, b, scroll){
+    a = parseInt(a, 10); b = parseInt(b, 10);
+    if (!a || !b){ renderLab('Schreib zwei Zahlen größer als 0 hin.', true); return; }
+    L = {a, b, pairs:0, sel:null};
+    $('#oa').value = a; $('#ob').value = b;
+    renderLab();
+    if (scroll) $('.lab').scrollIntoView({behavior: reduce ? 'auto' : 'smooth', block: 'start'});
+  }
+
+  PRESETS.forEach(([a, b]) => {
+    const c = document.createElement('button');
+    c.type = 'button'; c.className = 'chip'; c.textContent = `${fmt(a)} : ${fmt(b)}`;
+    c.addEventListener('click', () => load(a, b, true));
+    $('#chips').appendChild(c);
+  });
+  ['#oa', '#ob'].forEach(id => {
+    const el = $(id);
+    el.addEventListener('input', () => { el.value = el.value.replace(/\D/g, '').slice(0, 6); });
+    el.addEventListener('keydown', e => { if (e.key === 'Enter') load($('#oa').value, $('#ob').value, true); });
+  });
+  $('#oload').addEventListener('click', () => load($('#oa').value, $('#ob').value, true));
+  playBtn.addEventListener('click', play);
+  $('#reset').addEventListener('click', () => { L.pairs = 0; L.sel = null; renderLab(); });
+
+  // ---------- trap pictures ----------
+  $('#trap-a').innerHTML = groupsHTML(2, 4, 0, 10);
+  $('#trap-b').innerHTML = tiles(8, 100);
+
+  // ---------- quiz ----------
+  const ROUND = 10;
+  const rand = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+  let Q = null;
+  function genTask(){
+    const r = Math.random(), b0 = rand(2, 9), q0 = rand(2, 9);
+    let j, d;
+    if (r < 0.35){ d = 0; j = rand(1, 3); }
+    else if (r < 0.85){ d = 1; j = rand(1, 2); }
+    else { d = 2; j = 1; }
+    return {a: b0 * q0 * P10(j + d), b: b0 * P10(j), q: q0 * P10(d)};
+  }
+  function newRound(){
+    const tasks = [], seen = new Set();
+    while (tasks.length < ROUND){
+      const t = genTask(), key = t.a + ':' + t.b;
+      if (!seen.has(key)){ seen.add(key); tasks.push(t); }
+    }
+    Q = {tasks, i:0, right:0, answered:false, tried:false};
+    $('#qbody').innerHTML = `<div class="task"><span id="ta"></span><span class="op">:</span><span id="tb"></span><span class="op">=</span><input id="tin" inputmode="numeric" autocomplete="off" aria-label="Deine Antwort"></div>`;
+    $('#qctl').innerHTML = `<button class="btn" id="qcheck" type="button">Prüfen</button><button class="btn ghost" id="qshow" type="button">Zeig’s mir</button>`;
+    wireQuiz();
+    showTask();
+  }
+  function showTask(){
+    const t = Q.tasks[Q.i];
+    Q.answered = false; Q.tried = false;
+    $('#ta').textContent = fmt(t.a); $('#tb').textContent = fmt(t.b);
+    const tin = $('#tin'); tin.value = ''; tin.style.width = '3.4ch'; tin.disabled = false;
+    $('#qcheck').textContent = 'Prüfen';
+    const fb = $('#fb'); fb.textContent = ''; fb.className = 'fb';
+    updateTop();
+  }
+  function updateTop(){
+    $('#qpos').textContent = `Aufgabe ${Math.min(Q.i + 1, ROUND)} von ${ROUND}`;
+    $('#qscore').textContent = `${Q.right} richtig`;
+    $('#qbar').style.width = `${(Q.i + (Q.answered ? 1 : 0)) / ROUND * 100}%`;
+  }
+  function check(){
+    if (Q.answered){ next(); return; }
+    const t = Q.tasks[Q.i], tin = $('#tin'), fb = $('#fb');
+    const v = parseInt(tin.value.replace(/\D/g, ''), 10);
+    if (isNaN(v)){ fb.className = 'fb'; fb.textContent = 'Schreib zuerst deine Antwort ins Kästchen.'; tin.focus(); return; }
+    if (v === t.q){
+      if (!Q.tried) Q.right++;
+      Q.answered = true; tin.disabled = true;
+      fb.className = 'fb ok';
+      fb.textContent = `Richtig! Probe: ${fmt(t.q)} · ${fmt(t.b)} = ${fmt(t.a)} ✓`;
+      $('#qcheck').textContent = Q.i + 1 < ROUND ? 'Weiter' : 'Fertig';
+      $('#qcheck').focus();
+    } else {
+      Q.tried = true;
+      fb.className = 'fb no';
+      const tenOff = [10, 100, 1000].some(f => v * f === t.q || t.q * f === v);
+      fb.textContent = tenOff
+        ? `Fast! Du liegst um Nullen daneben. Probe: ${fmt(v)} · ${fmt(t.b)} = ${fmt(v * t.b)}, nicht ${fmt(t.a)}. Hast du nur Paare gestrichen?`
+        : `Noch nicht. Probe: ${fmt(v)} · ${fmt(t.b)} = ${fmt(v * t.b)}, nicht ${fmt(t.a)}. Versuch es nochmal.`;
+      tin.select();
+    }
+    updateTop();
+  }
+  function next(){
+    Q.i++;
+    if (Q.i < ROUND){ showTask(); $('#tin').focus(); return; }
+    $('#qbar').style.width = '100%';
+    $('#qpos').textContent = `${ROUND} von ${ROUND}`;
+    $('#qbody').innerHTML = `<p class="done">Geschafft: ${Q.right} von ${ROUND} beim ersten Versuch richtig.</p>`;
+    $('#fb').textContent = ''; $('#fb').className = 'fb';
+    $('#qctl').innerHTML = `<button class="btn" id="qagain" type="button">Neue Runde</button>`;
+    $('#qagain').addEventListener('click', newRound);
+  }
+  function wireQuiz(){
+    const tin = $('#tin');
+    tin.addEventListener('input', () => { tin.value = tin.value.replace(/\D/g, '').slice(0, 6); tin.style.width = Math.max(3.4, tin.value.length + 1.2) + 'ch'; });
+    tin.addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+    $('#qcheck').addEventListener('click', check);
+    $('#qshow').addEventListener('click', () => { const t = Q.tasks[Q.i]; load(t.a, t.b, true); });
+  }
+
+  load(800, 20, false);
+  newRound();
+})();
+</script>
+</body>
+</html>

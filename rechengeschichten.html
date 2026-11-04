@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rechengeschichten</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+/* Layout: same Karopapier world as the other pages. Rule strip (whole / piece / count) on top, then the story trainer as one card that unfolds step by step. */
+:root{
+  --paper:#fbfcff; --grid:#e3e9f5; --ink:#1a2342; --ink-soft:#56607c;
+  --pen:#2447c9; --pen-ink:#ffffff; --card:#ffffff; --line:#cdd6ea;
+  --rw:#2447c9; --rp:#d98a0c; --rn:#1f9588; --role-ink:#ffffff;
+  --piece:#ecd3a4; --piece-2:#e2c48c; --piece-line:#a98a55;
+  --ok:#1f8a4c; --no:#c2410c;
+  --display:"Bricolage Grotesque","Avenir Next","Trebuchet MS",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#17241e; --grid:#20322a; --ink:#eef4ef; --ink-soft:#a7b8ae;
+    --pen:#9db8ff; --pen-ink:#0f1830; --card:#1e2f27; --line:#33493e;
+    --rw:#9db8ff; --rp:#f5b93a; --rn:#3cc2b2; --role-ink:#10201a;
+    --piece:#d4bd8f; --piece-2:#c4ab78; --piece-line:#8a7449;
+    --ok:#5fd08d; --no:#ff9a62; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#17241e; --grid:#20322a; --ink:#eef4ef; --ink-soft:#a7b8ae;
+  --pen:#9db8ff; --pen-ink:#0f1830; --card:#1e2f27; --line:#33493e;
+  --rw:#9db8ff; --rp:#f5b93a; --rn:#3cc2b2; --role-ink:#10201a;
+  --piece:#d4bd8f; --piece-2:#c4ab78; --piece-line:#8a7449;
+  --ok:#5fd08d; --no:#ff9a62; color-scheme:dark;
+}
+
+body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+body{
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:20px 20px;
+  color:var(--ink); font-family:var(--body); font-size:17px; line-height:1.5;
+}
+.wrap{
+  max-width:980px; margin:0 auto; display:grid; gap:40px;
+  padding-block:28px 72px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+h1,h2,h3{font-family:var(--display); text-wrap:balance; margin:0; line-height:1.08}
+h1{font-size:clamp(38px,7vw,58px); font-weight:800; letter-spacing:-.02em}
+h2{font-size:clamp(24px,4vw,30px); font-weight:750}
+h3{font-size:20px; font-weight:750}
+p{margin:0}
+.lede{font-size:19px; color:var(--ink-soft); max-width:52ch; margin-top:10px}
+.eyebrow{font:700 13px/1 var(--body); letter-spacing:.09em; text-transform:uppercase; color:var(--pen)}
+.card{
+  background:var(--card); border:1.5px solid var(--line); border-radius:22px;
+  box-shadow:5px 5px 0 var(--line); padding:clamp(18px,3.5vw,32px); min-width:0;
+}
+.w{color:var(--rw)} .p{color:var(--rp)} .n{color:var(--rn)}
+
+/* ---------- rule strip ---------- */
+.rules{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-top:14px}
+.rule{background:var(--card); border:1.5px solid var(--line); border-radius:16px; padding:16px; display:grid; gap:10px; align-content:start; min-width:0}
+.rule .verdict{font:800 22px/1.1 var(--display)}
+.rule .formula{font:700 16px/1.3 var(--display); color:var(--ink-soft)}
+.rule .ex{font-size:15px; color:var(--ink-soft)}
+.mb{display:grid; gap:4px; font:700 13px/1 var(--display)}
+.mb .top{border:2px solid var(--rw); border-bottom:0; height:8px; border-radius:4px 4px 0 0}
+.mb .tl{text-align:center; color:var(--rw)}
+.mb .row{display:flex; height:22px; border:1.5px solid var(--piece-line); border-radius:5px; overflow:hidden}
+.mb .row i{flex:1; background:var(--piece); border-right:1.5px solid var(--piece-line); display:grid; place-items:center; font-style:normal; color:var(--ink); font-size:12px}
+.mb .row i:nth-child(even){background:var(--piece-2)}
+.mb .row i:last-child{border-right:0}
+.mb .row i.hatch{flex:3; background:repeating-linear-gradient(135deg,transparent 0 6px,color-mix(in srgb,var(--rn) 30%,transparent) 6px 9px)}
+.mb .bl{text-align:center; color:var(--rn)}
+.mb .q{color:var(--no)}
+
+/* ---------- trainer ---------- */
+.trainer{display:grid; gap:22px}
+.qtop{display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; font:700 15px/1 var(--display); color:var(--ink-soft)}
+.bar-p{height:8px; border-radius:99px; background:var(--line); overflow:hidden; margin-top:8px}
+.bar-p i{display:block; height:100%; width:0; background:var(--pen); border-radius:99px; transition:width .3s}
+.steps{display:flex; flex-wrap:wrap; gap:6px; list-style:none; margin:0; padding:0}
+.steps li{font:700 14px/1 var(--display); padding:7px 11px; border-radius:999px; border:1.5px solid var(--line); color:var(--ink-soft)}
+.steps li.now{border-color:var(--pen); color:var(--pen)}
+.steps li.done{background:color-mix(in srgb,var(--ok) 14%,transparent); border-color:transparent; color:var(--ok)}
+
+.story{font-size:clamp(21px,3vw,26px); line-height:1.6; max-width:40ch}
+.story .q{display:block; margin-top:6px; font-weight:700}
+.chip{
+  font:750 1em/1.2 var(--display); font-variant-numeric:tabular-nums; color:var(--pen);
+  background:var(--paper); border:2px solid var(--line); border-bottom-width:3px; border-radius:10px;
+  padding:1px 8px; cursor:pointer; white-space:nowrap;
+}
+.chip:hover{border-color:var(--pen)}
+.chip.sel{border-color:var(--pen); background:color-mix(in srgb,var(--pen) 14%,transparent); animation:pulse 1s ease-in-out infinite}
+.chip.placed{cursor:default; color:var(--role-ink); border-color:transparent}
+.chip.placed[data-role="W"]{background:var(--rw)}
+.chip.placed[data-role="P"]{background:var(--rp)}
+.chip.placed[data-role="N"]{background:var(--rn)}
+@keyframes pulse{50%{background:color-mix(in srgb,var(--pen) 28%,transparent)}}
+
+.say{font-size:19px; min-height:1.6em; max-width:62ch}
+.say.ok{color:var(--ok)} .say.no{color:var(--no)}
+.say b{font-family:var(--display)}
+
+.slots{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px}
+.slot{
+  all:unset; box-sizing:border-box; cursor:pointer; min-width:0;
+  display:grid; gap:4px; padding:14px; border-radius:16px; border:2px dashed var(--line); background:var(--paper);
+}
+.slot:hover{border-color:var(--c)}
+.slot:focus-visible{outline:3px solid var(--pen); outline-offset:2px}
+.slot[data-role="W"]{--c:var(--rw)} .slot[data-role="P"]{--c:var(--rp)} .slot[data-role="N"]{--c:var(--rn)}
+.s-name{font:800 18px/1.1 var(--display); color:var(--c)}
+.s-sub{font-size:14px; color:var(--ink-soft)}
+.s-val{font:800 clamp(22px,3.4vw,30px)/1.2 var(--display); font-variant-numeric:tabular-nums; color:var(--ink-soft)}
+.slot.sel{border-style:solid; border-color:var(--c); animation:pulse 1s ease-in-out infinite}
+.slot.filled{border-style:solid; border-color:var(--c); background:color-mix(in srgb,var(--c) 10%,var(--card)); cursor:default}
+.slot.filled .s-val{color:var(--ink)}
+.slot.asked{border-style:solid; border-color:var(--no); background:color-mix(in srgb,var(--no) 10%,var(--card)); cursor:default}
+.slot.asked .s-val{color:var(--no)}
+.slot.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* model picture */
+.model{display:grid; gap:6px; padding:8px 0}
+.brace{display:grid; gap:4px; text-align:center; font:750 17px/1.2 var(--display); font-variant-numeric:tabular-nums}
+.brace .ln{height:10px; border:2.5px solid currentColor; border-radius:5px 5px 0 0; border-bottom:0}
+.brace.bottom .ln{border-radius:0 0 5px 5px; border-top:0; border-bottom:2.5px solid currentColor}
+.brace.top{color:var(--rw)} .brace.bottom{color:var(--rn)}
+.brace.q{color:var(--no)}
+.mbar{display:flex; height:56px; border:2px solid var(--piece-line); border-radius:8px; overflow:hidden; background:var(--paper)}
+.pc{
+  flex:1 1 0; min-width:0; display:grid; place-items:center; overflow:hidden;
+  background:var(--piece); border-right:1.5px solid var(--piece-line);
+  font:750 15px/1.1 var(--display); color:var(--ink); white-space:nowrap;
+  animation:grow .35s ease-out both;
+}
+.pc:nth-child(even){background:var(--piece-2)}
+.pc:last-child{border-right:0}
+.pc.q{color:var(--no)}
+.pc.rest{flex-grow:var(--rest,3); background:repeating-linear-gradient(135deg,transparent 0 8px,color-mix(in srgb,var(--rn) 28%,transparent) 8px 12px); color:var(--rn); animation:none}
+@keyframes grow{from{opacity:0; transform:scaleX(.3)}}
+.model-note{color:var(--ink-soft); font-size:16px}
+
+.ops{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px}
+.op{
+  font:750 clamp(19px,2.8vw,24px)/1.2 var(--display); font-variant-numeric:tabular-nums;
+  padding:14px; border-radius:14px; border:2px solid var(--line); background:var(--paper); color:var(--ink); cursor:pointer; text-align:center;
+}
+.op:hover{border-color:var(--pen)}
+.op:focus-visible,.btn:focus-visible{outline:3px solid var(--pen); outline-offset:2px}
+.op.right{border-color:var(--ok); background:color-mix(in srgb,var(--ok) 14%,var(--card)); color:var(--ok)}
+.op.wrong{border-color:var(--no); color:var(--no); opacity:.7}
+.op:disabled{cursor:default}
+
+.calc{display:flex; flex-wrap:wrap; align-items:baseline; gap:.3em; font:750 clamp(26px,5vw,40px)/1.2 var(--display); font-variant-numeric:tabular-nums}
+.calc input{
+  font:inherit; color:var(--pen); width:4ch; text-align:center; padding:0 6px;
+  background:var(--paper); border:2.5px solid var(--line); border-radius:12px; outline:none;
+}
+.calc input:focus-visible{border-color:var(--pen)}
+.calc .unit{color:var(--ink-soft); font-size:.7em}
+.tip{font-size:17px; color:var(--ink-soft); max-width:62ch}
+.tip b{color:var(--ink)}
+
+.controls{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+.btn{
+  font:700 19px/1 var(--display); border-radius:14px; padding:14px 22px; cursor:pointer;
+  border:2px solid var(--pen); background:var(--pen); color:var(--pen-ink);
+}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent; color:var(--pen)}
+.stage{display:grid; gap:14px}
+.stage[hidden]{display:none!important}
+.stage h3 .num{color:var(--ink-soft); font-weight:600}
+.answer{font:750 clamp(20px,3vw,26px)/1.3 var(--display)}
+.probe{color:var(--ok); font-weight:700; font-variant-numeric:tabular-nums}
+.done{font:750 clamp(26px,5vw,38px)/1.15 var(--display)}
+
+footer{color:var(--ink-soft); font-size:15px; display:flex; flex-wrap:wrap; gap:6px 18px}
+footer a{color:var(--pen)}
+
+@media (max-width:680px){
+  .rules{grid-template-columns:minmax(0,1fr)}
+  .slots{grid-template-columns:minmax(0,1fr)}
+  .slot{grid-template-columns:auto 1fr auto; align-items:baseline; gap:4px 10px}
+  .slot .s-sub{grid-column:2}
+  .slot .s-val{grid-row:1 / span 2; grid-column:3; align-self:center}
+  .ops{grid-template-columns:minmax(0,1fr)}
+  .btn{font-size:17px; padding:12px 18px}
+  .pc{font-size:12px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important; animation:none!important}
+}
+</style>
+
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <div class="eyebrow">Erst malen, dann rechnen</div>
+    <h1>Rechengeschichten</h1>
+    <p class="lede">Jede dieser Geschichten hat drei Teile: <b class="w">das Ganze</b>, <b class="p">ein Stück</b> und <b class="n">die Anzahl</b> der Stücke. Zwei davon stehen in der Geschichte. Der dritte fehlt. Was fehlt, verrät die Rechnung.</p>
+  </header>
+
+  <section aria-labelledby="rules-title">
+    <h2 id="rules-title">Die Regel</h2>
+    <div class="rules">
+      <div class="rule">
+        <div class="mb"><div class="tl q">? Ganzes</div><div class="top" style="border-color:var(--no)"></div>
+          <div class="row"><i>2 €</i><i>2 €</i><i>2 €</i><i>2 €</i><i>2 €</i></div><div class="bl">5 Stück</div></div>
+        <div class="verdict">Das Ganze fehlt: <span class="w">mal</span></div>
+        <div class="formula">Anzahl · ein Stück</div>
+        <p class="ex">5 Hefte zu je 2 €. Was kostet alles? 5 · 2 € = 10 €</p>
+      </div>
+      <div class="rule">
+        <div class="mb"><div class="tl">10 €</div><div class="top"></div>
+          <div class="row"><i class="q">?</i><i class="q">?</i><i class="q">?</i><i class="q">?</i><i class="q">?</i></div><div class="bl">5 Stück</div></div>
+        <div class="verdict">Ein Stück fehlt: <span class="p">geteilt</span></div>
+        <div class="formula">Ganzes : Anzahl (verteilen)</div>
+        <p class="ex">10 € für 5 Hefte. Was kostet eins? 10 € : 5 = 2 €</p>
+      </div>
+      <div class="rule">
+        <div class="mb"><div class="tl">10 €</div><div class="top"></div>
+          <div class="row"><i>2 €</i><i>2 €</i><i class="hatch"></i></div><div class="bl q">? Stück</div></div>
+        <div class="verdict">Die Anzahl fehlt: <span class="n">geteilt</span></div>
+        <div class="formula">Ganzes : ein Stück (wie oft passt?)</div>
+        <p class="ex">10 €, ein Heft kostet 2 €. Wie viele? 10 € : 2 € = 5</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card trainer" aria-labelledby="tr-title">
+    <h2 id="tr-title" hidden>Geschichten üben</h2>
+    <div>
+      <div class="qtop"><span id="pos"></span><span id="score"></span></div>
+      <div class="bar-p"><i id="pbar"></i></div>
+    </div>
+    <div id="body"></div>
+  </section>
+
+  <footer>
+    <a href="index.html">← Alle Übungen</a>
+    <span>Auch hier:</span>
+    <a href="zahlen-sehen.html">Zahlen sehen</a>
+    <a href="nullen-paare.html">Nullen-Paare</a>
+  </footer>
+</main>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const rand = arr => arr[Math.floor(Math.random() * arr.length)];
+  const shuffle = arr => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+  // ---------- kinds of quantities ----------
+  const money = c => { const e = Math.floor(c / 100), r = c % 100; return r ? `${e},${String(r).padStart(2, '0')} €` : `${e} €`; };
+  const K = {
+    money:{f:money, unit:'€', money:true},
+    cm:{f:v => `${v} cm`, unit:'cm'},
+    km:{f:v => `${v} km`, unit:'km'},
+    ml:{f:v => `${v} ml`, unit:'ml'},
+    items: w => ({f:v => `${v} ${w}`, unit:w})
+  };
+
+  // ---------- stories ----------
+  // ask: which part is missing. W = das Ganze, P = ein Stück, N = Anzahl.
+  const T = [
+    {id:'diesel', ask:'N', k:K.money, P:[150,180,120], N:[10,20,30],
+     text:'1 Liter Diesel kostet {P}. Frau Müller tankt für {W}.', q:'Wie viele Liter hat sie getankt?',
+     nText:n => `${n} Liter`, nWord:'Liter', lab:{W:'insgesamt bezahlt', P:'Preis für 1 Liter', N:'Liter'},
+     ans:'Frau Müller hat {A} getankt.',
+     hint:{W:'Für {W} tankt sie insgesamt. Das ist das Ganze.', P:'{P} kostet ein einziger Liter. Das ist ein Stück.'}},
+    {id:'band', ask:'N', k:K.cm, P:[20,25,30,40], N:[4,6,8,12],
+     text:'Ein Geschenkband ist {W} lang. Lea schneidet Stücke von je {P} ab.', q:'Wie viele Stücke bekommt sie?',
+     nText:n => `${n} Stücke`, nWord:'Stücke', lab:{W:'ganzes Band', P:'ein Stück Band', N:'Stücke'},
+     ans:'Lea bekommt {A}.',
+     hint:{W:'{W} ist das ganze Band. Das ist das Ganze.', P:'{P} ist ein abgeschnittenes Stück.'}},
+    {id:'kekse', ask:'N', k:K.items('Kekse'), P:[6,8,9,12], N:[4,5,6,7],
+     text:'Oma hat {W} gebacken. In jede Dose passen {P}.', q:'Wie viele Dosen braucht sie?',
+     nText:n => `${n} Dosen`, nWord:'Dosen', lab:{W:'alle Kekse', P:'Kekse in 1 Dose', N:'Dosen'},
+     ans:'Oma braucht {A}.',
+     hint:{W:'{W} sind alle Kekse zusammen. Das ist das Ganze.', P:'{P} passen in eine Dose. Das ist ein Stück.'}},
+    {id:'sparen', ask:'N', k:K.money, P:[200,250,300,500], N:[4,6,8],
+     text:'Tim spart jede Woche {P}. Er möchte ein Spiel für {W} kaufen.', q:'Wie viele Wochen muss er sparen?',
+     nText:n => `${n} Wochen`, nWord:'Wochen', lab:{W:'Preis vom Spiel', P:'Geld pro Woche', N:'Wochen'},
+     ans:'Tim muss {A} sparen.',
+     hint:{W:'{W} braucht er insgesamt. Das ist das Ganze.', P:'{P} spart er in einer Woche. Das ist ein Stück.'}},
+
+    {id:'pizza', ask:'P', k:K.money, P:[450,600,750,800], N:[3,4,5,6],
+     text:'{N} essen zusammen Pizza. Die Rechnung beträgt {W}. Sie teilen gerecht.', q:'Wie viel zahlt jede?',
+     nText:n => `${n} Freundinnen`, nWord:'Freundinnen', lab:{W:'ganze Rechnung', P:'eine Freundin zahlt', N:'Freundinnen'},
+     ans:'Jede Freundin zahlt {A}.',
+     hint:{W:'{W} ist die ganze Rechnung. Das ist das Ganze.', N:'{N}: So viele teilen sich die Rechnung. Das ist die Anzahl.'}},
+    {id:'paket', ask:'P', k:K.money, P:[80,90,120,150], N:[5,8,10],
+     text:'Ein Paket mit {N} kostet {W}.', q:'Wie viel kostet ein Heft?',
+     nText:n => `${n} Heften`, nWord:'Hefte', lab:{W:'ganzes Paket', P:'ein Heft', N:'Hefte'},
+     ans:'Ein Heft kostet {A}.',
+     hint:{W:'{W} kostet das ganze Paket. Das ist das Ganze.', N:'{N} sind im Paket. Das ist die Anzahl.'}},
+    {id:'auto', ask:'P', k:K.km, P:[80,90,100,120], N:[2,3,4],
+     text:'Papa fährt {W} weit. Er braucht dafür {N} und fährt immer gleich schnell.', q:'Wie viele Kilometer schafft er in einer Stunde?',
+     nText:n => `${n} Stunden`, nWord:'Stunden', lab:{W:'ganze Strecke', P:'in 1 Stunde', N:'Stunden'},
+     ans:'Papa schafft {A} in einer Stunde.',
+     hint:{W:'{W} ist die ganze Strecke. Das ist das Ganze.', N:'{N}: so viele Stunden ist er unterwegs. Das ist die Anzahl.'}},
+    {id:'saft', ask:'P', k:K.ml, P:[150,200,250], N:[4,6,8],
+     text:'{W} Saft werden gleichmäßig auf {N} verteilt.', q:'Wie viel Saft kommt in jedes Glas?',
+     nText:n => `${n} Gläser`, nWord:'Gläser', lab:{W:'aller Saft', P:'in 1 Glas', N:'Gläser'},
+     ans:'In jedes Glas kommen {A}.',
+     hint:{W:'{W} ist der ganze Saft. Das ist das Ganze.', N:'{N}: auf so viele wird verteilt. Das ist die Anzahl.'}},
+
+    {id:'hefte', ask:'W', k:K.money, P:[80,95,120,150], N:[3,4,5,6],
+     text:'Ein Heft kostet {P}. Mia kauft {N}.', q:'Wie viel muss sie bezahlen?',
+     nText:n => `${n} Hefte`, nWord:'Hefte', lab:{W:'alles zusammen', P:'ein Heft', N:'Hefte'},
+     ans:'Mia muss {A} bezahlen.',
+     hint:{P:'{P} kostet ein einziges Heft. Das ist ein Stück.', N:'{N} kauft sie. Das ist die Anzahl.'}},
+    {id:'benzin', ask:'W', k:K.money, P:[160,170,180], N:[10,20,30],
+     text:'1 Liter Benzin kostet {P}. Herr Yilmaz tankt {N}.', q:'Wie viel muss er bezahlen?',
+     nText:n => `${n} Liter`, nWord:'Liter', lab:{W:'insgesamt', P:'Preis für 1 Liter', N:'Liter'},
+     ans:'Herr Yilmaz muss {A} bezahlen.',
+     hint:{P:'{P} kostet ein einziger Liter. Das ist ein Stück.', N:'{N} tankt er. Das ist die Anzahl.'}},
+    {id:'kisten', ask:'W', k:K.items('Flaschen'), P:[6,12,20], N:[5,8,10],
+     text:'In eine Kiste passen {P}. Im Lager stehen {N}.', q:'Wie viele Flaschen sind das zusammen?',
+     nText:n => `${n} volle Kisten`, nWord:'Kisten', lab:{W:'alle Flaschen', P:'Flaschen in 1 Kiste', N:'Kisten'},
+     ans:'Das sind {A}.',
+     hint:{P:'{P} sind in einer Kiste. Das ist ein Stück.', N:'{N}: so viele Kisten gibt es. Das ist die Anzahl.'}},
+    {id:'lesen', ask:'W', k:K.items('Seiten'), P:[12,15,20,25], N:[5,6,7],
+     text:'Lisa liest jeden Tag {P}.', q:'Wie viele Seiten hat sie nach {N} gelesen?',
+     nText:n => `${n} Tagen`, nWord:'Tage', lab:{W:'alle Seiten', P:'Seiten an 1 Tag', N:'Tage'},
+     ans:'Lisa hat {A} gelesen.',
+     hint:{P:'{P} liest sie an einem Tag. Das ist ein Stück.', N:'{N}: so lange liest sie. Das ist die Anzahl.'}}
+  ];
+  const NAME = {W:'Das Ganze', P:'Ein Stück', N:'Anzahl'};
+  const PHRASE = {W:'das Ganze', P:'ein Stück', N:'die Anzahl'};
+  const ROUND = 9;
+
+  // ---------- round ----------
+  let R = null, S = null;
+  function makeStory(t, P, N){ P = P ?? rand(t.P); N = N ?? rand(t.N); return {t, P, N, W:P * N}; }
+  function newRound(){
+    const byAsk = a => shuffle(T.filter(t => t.ask === a && t.id !== 'diesel'));
+    const list = [makeStory(T[0], 150, 10)];
+    const rest = [...byAsk('N').slice(0, 2), ...byAsk('P').slice(0, 3), ...byAsk('W').slice(0, 3)];
+    shuffle(rest).forEach(t => list.push(makeStory(t)));
+    R = {list, i:0, seen:0};
+    start();
+  }
+  function start(){
+    const st = R.list[R.i];
+    S = {...st, placed:{}, sel:null, step:1, opFirst:null};
+    render();
+  }
+
+  // ---------- formatting ----------
+  const fv = (role, s = S) => role === 'N' ? s.t.nText(s.N) : s.t.k.f(s[role]);
+  const fill = (str, s = S) => str.replace(/\{([WPN])\}/g, (_, r) => fv(r, s));
+  const valFor = r => r === 'N' ? `${S.N}` : S.t.k.f(S[r]);
+
+  function storyHTML(){
+    const chip = r => {
+      const placed = S.placed[r];
+      return `<button type="button" class="chip${placed ? ' placed' : ''}${S.sel === r ? ' sel' : ''}" data-role="${r}"${placed ? ' disabled' : ''}>${fv(r)}</button>`;
+    };
+    const sub = str => str.replace(/\{([WPN])\}/g, (_, r) => chip(r));
+    return `<p class="story">${sub(S.t.text)}<span class="q">${sub(S.t.q)}</span></p>`;
+  }
+
+  function slotsHTML(){
+    return `<div class="slots">${['W','P','N'].map(r => {
+      const filled = S.placed[r], asked = S.step > 1 && r === S.t.ask;
+      return `<button type="button" class="slot${filled ? ' filled' : ''}${asked ? ' asked' : ''}${S.selSlot === r ? ' sel' : ''}" data-role="${r}">
+        <span class="s-name">${NAME[r]}</span><span class="s-sub">${S.t.lab[r]}</span>
+        <span class="s-val">${filled ? valFor(r) : asked ? '?' : '…'}</span></button>`;
+    }).join('')}</div>`;
+  }
+
+  function modelHTML(){
+    const ask = S.t.ask, n = S.N;
+    const top = ask === 'W' ? `<div class="brace top q"><span>? das Ganze</span><div class="ln"></div></div>`
+                            : `<div class="brace top"><span>${fv('W')}</span><div class="ln"></div></div>`;
+    let pcs = '';
+    if (ask === 'N'){
+      const shown = Math.min(2, n - 1);
+      for (let i = 0; i < shown; i++) pcs += `<div class="pc" style="animation-delay:${i * 150}ms">${fv('P')}</div>`;
+      pcs += `<div class="pc rest" style="--rest:${n - shown}">? Stücke</div>`;
+    } else {
+      const label = ask === 'P' ? '?' : fv('P');
+      const showLabel = n <= 10;
+      for (let i = 0; i < n; i++)
+        pcs += `<div class="pc${ask === 'P' ? ' q' : ''}" style="animation-delay:${reduce ? 0 : i * Math.min(120, 900 / n)}ms">${showLabel || i === 0 ? label : ''}</div>`;
+    }
+    const bottom = ask === 'N'
+      ? `<div class="brace bottom q"><div class="ln"></div><span>Wie oft passt ${fv('P')} hinein?</span></div>`
+      : `<div class="brace bottom"><div class="ln"></div><span>${S.N} ${S.t.nWord}</span></div>`;
+    const note = ask === 'N' ? `Du kennst das Ganze und ein Stück. Gesucht ist, wie viele Stücke hineinpassen.`
+               : ask === 'P' ? `Du kennst das Ganze und die Anzahl. Gesucht ist, wie groß ein Stück ist.`
+               : `Du kennst ein Stück und die Anzahl. Gesucht ist das Ganze.`;
+    return `<div class="model">${top}<div class="mbar">${pcs}</div>${bottom}</div><p class="model-note">${note}</p>`;
+  }
+
+  function options(){
+    const W = fv('W'), P = fv('P'), N = `${S.N}`, ask = S.t.ask;
+    if (ask === 'N') return [{t:`${W} : ${P}`, ok:true}, {t:`${W} · ${P}`, why:'op'}, {t:`${P} : ${W}`, why:'rev'}, {t:`${W} − ${P}`, why:'op'}];
+    if (ask === 'P') return [{t:`${W} : ${N}`, ok:true}, {t:`${W} · ${N}`, why:'op'}, {t:`${N} : ${W}`, why:'rev'}, {t:`${W} − ${N}`, why:'op'}];
+    return [{t:`${N} · ${P}`, ok:true}, {t:`${P} : ${N}`, why:'op'}, {t:`${N} : ${P}`, why:'op'}, {t:`${N} + ${P}`, why:'op'}];
+  }
+  function reason(){
+    const ask = S.t.ask;
+    if (ask === 'N') return `Du suchst, wie oft ${fv('P')} in ${fv('W')} passt. Das ist <b>geteilt</b>: Ganzes : ein Stück.`;
+    if (ask === 'P') return `Du verteilst ${fv('W')} gerecht auf ${S.N} ${S.t.nWord}. Das ist <b>geteilt</b>: Ganzes : Anzahl.`;
+    return `Du nimmst ${S.N}-mal ${fv('P')}. Das ist <b>mal</b>: Anzahl · ein Stück.`;
+  }
+
+  const stripPairs = (a, b) => { while (a % 10 === 0 && b % 10 === 0){ a /= 10; b /= 10; } return [a, b]; };
+  function tipText(){
+    const ask = S.t.ask, k = S.t.k;
+    if (ask === 'N'){
+      const [a, b] = stripPairs(S.W, S.P);
+      const cents = k.money ? `${fv('W')} sind ${S.W} Cent, ${fv('P')} sind ${S.P} Cent. ` : '';
+      return `${cents}Rechne <b>${S.W} : ${S.P}</b>.${a !== S.W ? ` Nullen-Paare streichen: <b>${a} : ${b}</b>.` : ''} Wie oft passt ${b} in ${a}?`;
+    }
+    if (ask === 'P'){
+      return k.money ? `${fv('W')} sind ${S.W} Cent. Rechne <b>${S.W} Cent : ${S.N}</b>. Welche Zahl mal ${S.N} ergibt ${S.W}?`
+                     : `Rechne <b>${S.W} : ${S.N}</b>. Welche Zahl mal ${S.N} ergibt ${S.W}?`;
+    }
+    return k.money ? `${fv('P')} sind ${S.P} Cent. Rechne <b>${S.N} · ${S.P} Cent</b> und mach daraus wieder Euro.`
+                   : `Rechne <b>${S.N} · ${S.P}</b>.`;
+  }
+  const answerUnit = () => S.t.ask === 'N' ? S.t.nWord : S.t.k.unit;
+  const answerValue = () => S[S.t.ask];
+  const answerText = () => S.t.ask === 'N' ? `${S.N} ${S.t.nWord}` : S.t.k.f(answerValue());
+  function parseAnswer(str){
+    if (S.t.ask !== 'N' && S.t.k.money){
+      const x = parseFloat(str.replace(/[€\s]/g, '').replace(',', '.'));
+      return isNaN(x) ? NaN : Math.round(x * 100);
+    }
+    return parseInt(str.replace(/\D/g, ''), 10);
+  }
+  function probe(){
+    const ask = S.t.ask;
+    if (ask === 'W') return `Probe: ${fv('W')} : ${S.N} = ${fv('P')} ✓`;
+    return `Probe: ${S.N} · ${fv('P')} = ${fv('W')} ✓`;
+  }
+
+  // ---------- render ----------
+  const STEPS = ['Zahlen einordnen', 'Bild ansehen', 'Rechnung wählen', 'Ausrechnen'];
+  function render(msg, cls){
+    const body = $('#body');
+    const stepIdx = S.step === 1 ? 0 : S.step === 2 ? 2 : 3;
+    let h = `<ol class="steps">${STEPS.map((s, i) => `<li class="${i < stepIdx ? 'done' : i === stepIdx || (i === 1 && S.step === 2) ? 'now' : ''}">${i + 1} ${s}</li>`).join('')}</ol>`;
+    h += storyHTML();
+    h += `<p class="say ${cls || ''}" id="say" aria-live="polite">${msg ?? defaultSay()}</p>`;
+    h += slotsHTML();
+    if (S.step >= 2){
+      h += `<div class="stage">${modelHTML()}</div>`;
+      h += `<div class="stage"><h3>Welche Rechnung passt?</h3><div class="ops" id="ops">${(S.ops || []).map((o, i) =>
+        `<button type="button" class="op${o.state ? ' ' + o.state : ''}" data-i="${i}"${S.step > 2 ? ' disabled' : ''}>${o.t}</button>`).join('')}</div>
+        <p class="say" id="opsay">${S.opMsg || ''}</p></div>`;
+    }
+    if (S.step >= 3){
+      const correct = S.ops.find(o => o.ok).t;
+      h += `<div class="stage"><h3>Ausrechnen</h3>
+        <div class="calc"><span>${correct} =</span><input id="ain" inputmode="decimal" autocomplete="off" aria-label="Ergebnis"${S.step === 4 ? ` disabled value="${S.lastInput || ''}"` : ''}><span class="unit">${answerUnit()}</span></div>
+        <p class="tip" id="tip"${S.showTip ? '' : ' hidden'}>${tipText()}</p>
+        ${S.step === 3 ? `<div class="controls"><button class="btn" id="acheck" type="button">Prüfen</button><button class="btn ghost" id="atip" type="button">Tipp</button></div>` : ''}
+        <p class="say ${S.aCls || ''}" id="asay">${S.aMsg || ''}</p></div>`;
+    }
+    if (S.step === 4){
+      h += `<div class="stage"><p class="answer">${S.t.ans.replace('{A}', answerText())}</p><p class="probe">${probe()}</p>
+        <div class="controls"><button class="btn" id="next" type="button">${R.i + 1 < R.list.length ? 'Nächste Geschichte' : 'Fertig'}</button></div></div>`;
+    }
+    body.innerHTML = h;
+    wire();
+    top();
+  }
+  function defaultSay(){
+    if (S.step === 1){
+      const left = ['W','P','N'].filter(r => r !== S.t.ask && !S.placed[r]).length;
+      if (S.sel) return `Wohin gehört <b>${fv(S.sel)}</b>? Tipp auf das passende Feld unten.`;
+      return left === 2 ? `Tipp eine blaue Zahl in der Geschichte an. Dann tipp auf das Feld unten, wohin sie gehört.` : `Gut! Jetzt die andere Zahl.`;
+    }
+    return `Gesucht ist <b>${PHRASE[S.t.ask]}</b>: ${S.t.lab[S.t.ask]}.`;
+  }
+  function top(){
+    $('#pos').textContent = `Geschichte ${R.i + 1} von ${R.list.length}`;
+    $('#score').textContent = `Rechnung sofort erkannt: ${R.list.slice(0, R.i + (S && S.opFirst !== null ? 1 : 0)).filter(x => x.firstOk).length}`;
+    $('#pbar').style.width = `${(R.i + (S && S.step === 4 ? 1 : 0)) / R.list.length * 100}%`;
+  }
+
+  function wire(){
+    // Either order works: number first, then box, or box first, then number.
+    function place(num, box){
+      S.sel = null; S.selSlot = null;
+      if (num === box){
+        S.placed[box] = true;
+        const need = ['W','P','N'].filter(x => x !== S.t.ask);
+        if (need.every(x => S.placed[x])){ S.step = 2; S.ops = shuffle(options()); }
+        render();
+      } else {
+        render(`Nicht ganz. ${fill(S.t.hint[num])}`, 'no');
+        const el = document.querySelector(`.slot[data-role="${box}"]`); if (el) el.classList.add('shake');
+      }
+    }
+    document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+      if (S.step !== 1) return;
+      const r = c.dataset.role;
+      if (S.selSlot){ place(r, S.selSlot); return; }
+      S.sel = S.sel === r ? null : r; render();
+    }));
+    document.querySelectorAll('.slot').forEach(sl => sl.addEventListener('click', () => {
+      if (S.step !== 1) return;
+      const r = sl.dataset.role;
+      if (S.placed[r]) return;
+      if (S.sel){ place(S.sel, r); return; }
+      if (r === S.t.ask){ render(`Dazu steht keine Zahl in der Geschichte. Genau das wird gefragt! Ordne erst die anderen zwei Zahlen ein.`, 'no'); return; }
+      S.selSlot = S.selSlot === r ? null : r;
+      render(S.selSlot ? `Welche Zahl aus der Geschichte ist <b>${PHRASE[r]}</b> (${S.t.lab[r]})? Tipp sie oben an.` : undefined);
+    }));
+    document.querySelectorAll('.op').forEach(b => b.addEventListener('click', () => {
+      if (S.step !== 2) return;
+      const o = S.ops[+b.dataset.i];
+      if (S.opFirst === null){ S.opFirst = !!o.ok; R.list[R.i].firstOk = !!o.ok; }
+      if (o.ok){
+        o.state = 'right'; S.opMsg = `Genau! ${reason()}`; S.step = 3;
+        render(); const ain = $('#ain'); if (ain) ain.focus({preventScroll:true});
+      } else {
+        o.state = 'wrong';
+        S.opMsg = o.why === 'rev' ? `Fast! Beim Teilen steht das Ganze vorne. ${reason()}` : `Noch nicht. ${reason()}`;
+        render();
+      }
+    }));
+    const ac = $('#acheck');
+    if (ac){
+      const ain = $('#ain');
+      ac.addEventListener('click', checkAnswer);
+      ain.addEventListener('keydown', e => { if (e.key === 'Enter') checkAnswer(); });
+      $('#atip').addEventListener('click', () => { S.showTip = true; $('#tip').hidden = false; });
+    }
+    const nx = $('#next');
+    if (nx) nx.addEventListener('click', () => { R.i++; R.i < R.list.length ? start() : finish(); window.scrollTo({top:$('.trainer').offsetTop - 12, behavior: reduce ? 'auto' : 'smooth'}); });
+  }
+
+  function checkAnswer(){
+    const ain = $('#ain'), raw = ain.value.trim();
+    const v = parseAnswer(raw);
+    if (isNaN(v)){ S.aMsg = 'Schreib zuerst dein Ergebnis ins Kästchen.'; S.aCls = 'no'; $('#asay').textContent = S.aMsg; $('#asay').className = 'say no'; return; }
+    if (v === answerValue()){
+      S.step = 4; S.lastInput = raw; S.aMsg = 'Richtig!'; S.aCls = 'ok';
+      render();
+      const nx = $('#next'); if (nx) nx.focus({preventScroll:true});
+    } else {
+      const ask = S.t.ask, k = S.t.k;
+      let p;
+      if (ask === 'N') p = `Probe: ${v} · ${fv('P')} = ${k.f(v * S.P)}, nicht ${fv('W')}.`;
+      else if (ask === 'P') p = `Probe: ${S.N} · ${k.f(v)} = ${k.f(v * S.N)}, nicht ${fv('W')}.`;
+      else p = `Probe: ${k.f(v)} : ${S.N} ist nicht ${fv('P')}.`;
+      S.aMsg = `Noch nicht. ${p} Tipp auf „Tipp“, wenn du Hilfe brauchst.`; S.aCls = 'no';
+      const el = $('#asay'); el.textContent = S.aMsg; el.className = 'say no';
+      ain.select();
+    }
+  }
+
+  function finish(){
+    const ok = R.list.filter(x => x.firstOk).length;
+    $('#body').innerHTML = `<div class="stage"><p class="done">Geschafft! Bei ${ok} von ${R.list.length} Geschichten hast du die Rechnung sofort erkannt.</p>
+      <div class="controls"><button class="btn" id="again" type="button">Neue Runde</button></div></div>`;
+    $('#pos').textContent = `${R.list.length} von ${R.list.length}`;
+    $('#score').textContent = `Rechnung sofort erkannt: ${ok}`;
+    $('#pbar').style.width = '100%';
+    $('#again').addEventListener('click', newRound);
+  }
+
+  newRound();
+})();
+</script>
+</body>
+</html>
