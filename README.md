@@ -1,6 +1,6 @@
 # Mathe sehen
 
-Interaktive Mathe-Übungen für die 5. Klasse. Die Idee: Rechenregeln sind leichter, wenn man sieht, warum sie stimmen. Erst sehen, dann rechnen.
+Interaktive Mathe-Übungen für alle, die Mathe verstehen statt auswendig lernen wollen. Die Idee: Rechenregeln sind leichter, wenn man sieht, warum sie stimmen. Erst sehen, dann rechnen.
 
 ## Die Übungen
 
