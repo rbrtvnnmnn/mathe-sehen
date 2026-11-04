@@ -4,21 +4,13 @@ Interaktive Mathe-Übungen für alle, die Mathe verstehen statt auswendig lernen
 
 ## Die Übungen
 
-Am besten in dieser Reihenfolge: erst Minus, dann Teilen, dann Textaufgaben, bei denen man selbst erkennen muss, ob mal oder geteilt gerechnet wird, und zum Schluss das Umrechnen in eine gemeinsame Einheit.
-
-| | Übung | Worum es geht |
-|---|---|---|
-| 1 | **Abstand** | Minus misst, wie weit zwei Zahlen auseinander liegen. „Subtrahiere 17 von 30“ heißt 30 − 17. Mit Zahlenstrahl, Paaren und „Wie viel mehr?“-Aufgaben. |
-| 2 | **Zahlen sehen** | Teilen mit Rechenklötzen. 800 : 200 ist dasselbe Bild wie 8 : 2, nur mit Hunderter-Platten statt Einer-Würfeln. |
-| 3 | **Nullen-Paare** | Nullen streichen, aber nur im Paar: 800 : 20 wird 80 : 2. Mit der Nullen-Falle und der Probe als Kontrolle. |
-| 4 | **Rechengeschichten** | Textaufgaben: Ist das mal oder geteilt? Die Zahlen als *das Ganze*, *ein Stück* und *Anzahl* einordnen, das Bild ansehen, dann die Rechnung wählen. |
-| 5 | **Gleiche Einheit** | Erst alles in dieselbe Einheit umrechnen, am einfachsten in die kleinere: 5 € − 0,78 € = 500 ct − 78 ct. Auch mit Metern, Kilogramm und Fahrkarten, bei denen Kinder den halben Preis zahlen. |
+Alle Übungen in der empfohlenen Reihenfolge stehen auf der Übersichtsseite: https://rbrtvnnmnn.github.io/mathe-sehen/
 
 Jede Übung endet mit Aufgaben zum Selberrechnen.
 
 ## Benutzen
 
-- **Online:** über GitHub Pages, der Link steht oben rechts beim Repository.
+- **Online:** https://rbrtvnnmnn.github.io/mathe-sehen/
 - **Offline:** Repository als ZIP herunterladen, entpacken und `index.html` im Browser öffnen.
 
 Es gibt nichts zu installieren. Die Seiten funktionieren auf Computer, Tablet und Handy.
