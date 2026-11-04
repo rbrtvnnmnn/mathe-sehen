@@ -248,8 +248,8 @@ footer a{color:var(--pen)}
         <div class="mb"><div class="tl q">? Ganzes</div><div class="top" style="border-color:var(--no)"></div>
           <div class="row"><i>2 €</i><i>2 €</i><i>2 €</i><i>2 €</i><i>2 €</i></div><div class="bl">5 Stück</div></div>
         <div class="verdict">Das Ganze fehlt: <span class="w">mal</span></div>
-        <div class="formula">Anzahl · ein Stück</div>
-        <p class="ex">5 Hefte zu je 2 €. Was kostet alles? 5 · 2 € = 10 €</p>
+        <div class="formula">ein Stück · Anzahl</div>
+        <p class="ex">5 Hefte zu je 2 €. Was kostet alles? 2 € · 5 = 10 €</p>
       </div>
       <div class="rule">
         <div class="mb"><div class="tl">10 €</div><div class="top"></div>
@@ -449,13 +449,13 @@ footer a{color:var(--pen)}
     const W = fv('W'), P = fv('P'), N = `${S.N}`, ask = S.t.ask;
     if (ask === 'N') return [{t:`${W} : ${P}`, ok:true}, {t:`${W} · ${P}`, why:'op'}, {t:`${P} : ${W}`, why:'rev'}, {t:`${W} − ${P}`, why:'op'}];
     if (ask === 'P') return [{t:`${W} : ${N}`, ok:true}, {t:`${W} · ${N}`, why:'op'}, {t:`${N} : ${W}`, why:'rev'}, {t:`${W} − ${N}`, why:'op'}];
-    return [{t:`${N} · ${P}`, ok:true}, {t:`${P} : ${N}`, why:'op'}, {t:`${N} : ${P}`, why:'op'}, {t:`${N} + ${P}`, why:'op'}];
+    return [{t:`${P} · ${N}`, ok:true}, {t:`${P} : ${N}`, why:'op'}, {t:`${N} : ${P}`, why:'op'}, {t:`${P} + ${N}`, why:'op'}];
   }
   function reason(){
     const ask = S.t.ask;
     if (ask === 'N') return `Du suchst, wie oft ${fv('P')} in ${fv('W')} passt. Das ist <b>geteilt</b>: Ganzes : ein Stück.`;
     if (ask === 'P') return `Du verteilst ${fv('W')} gerecht auf ${S.N} ${S.t.nWord}. Das ist <b>geteilt</b>: Ganzes : Anzahl.`;
-    return `Du nimmst ${S.N}-mal ${fv('P')}. Das ist <b>mal</b>: Anzahl · ein Stück.`;
+    return `Du nimmst ${S.N}-mal ${fv('P')}. Das ist <b>mal</b>: ein Stück · Anzahl.`;
   }
 
   const stripPairs = (a, b) => { while (a % 10 === 0 && b % 10 === 0){ a /= 10; b /= 10; } return [a, b]; };
@@ -470,8 +470,8 @@ footer a{color:var(--pen)}
       return k.money ? `${fv('W')} sind ${S.W} Cent. Rechne <b>${S.W} Cent : ${S.N}</b>. Welche Zahl mal ${S.N} ergibt ${S.W}?`
                      : `Rechne <b>${S.W} : ${S.N}</b>. Welche Zahl mal ${S.N} ergibt ${S.W}?`;
     }
-    return k.money ? `${fv('P')} sind ${S.P} Cent. Rechne <b>${S.N} · ${S.P} Cent</b> und mach daraus wieder Euro.`
-                   : `Rechne <b>${S.N} · ${S.P}</b>.`;
+    return k.money ? `${fv('P')} sind ${S.P} Cent. Rechne <b>${S.P} Cent · ${S.N}</b> und mach daraus wieder Euro.`
+                   : `Rechne <b>${S.P} · ${S.N}</b>.`;
   }
   const answerUnit = () => S.t.ask === 'N' ? S.t.nWord : S.t.k.unit;
   const answerValue = () => S[S.t.ask];
@@ -486,7 +486,7 @@ footer a{color:var(--pen)}
   function probe(){
     const ask = S.t.ask;
     if (ask === 'W') return `Probe: ${fv('W')} : ${S.N} = ${fv('P')} ✓`;
-    return `Probe: ${S.N} · ${fv('P')} = ${fv('W')} ✓`;
+    return `Probe: ${fv('P')} · ${S.N} = ${fv('W')} ✓`;
   }
 
   // ---------- render ----------
@@ -599,8 +599,8 @@ footer a{color:var(--pen)}
     } else {
       const ask = S.t.ask, k = S.t.k;
       let p;
-      if (ask === 'N') p = `Probe: ${v} · ${fv('P')} = ${k.f(v * S.P)}, nicht ${fv('W')}.`;
-      else if (ask === 'P') p = `Probe: ${S.N} · ${k.f(v)} = ${k.f(v * S.N)}, nicht ${fv('W')}.`;
+      if (ask === 'N') p = `Probe: ${fv('P')} · ${v} = ${k.f(v * S.P)}, nicht ${fv('W')}.`;
+      else if (ask === 'P') p = `Probe: ${k.f(v)} · ${S.N} = ${k.f(v * S.N)}, nicht ${fv('W')}.`;
       else p = `Probe: ${k.f(v)} : ${S.N} ist nicht ${fv('P')}.`;
       S.aMsg = `Noch nicht. ${p} Tipp auf „Tipp“, wenn du Hilfe brauchst.`; S.aCls = 'no';
       const el = $('#asay'); el.textContent = S.aMsg; el.className = 'say no';
