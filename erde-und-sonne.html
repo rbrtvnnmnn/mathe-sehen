@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Erde und Sonne</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+/* Layout: same Karopapier world. Space scenes are dark panels in both themes. Day/night (top view + sky), rule cards, seasons (orbit + side view + noon sun), myth cards, 10-question round. */
+:root{
+  --paper:#fbfcff; --grid:#e3e9f5; --ink:#1a2342; --ink-soft:#56607c;
+  --pen:#2447c9; --pen-ink:#ffffff; --card:#ffffff; --line:#cdd6ea;
+  --sun:#f2a516; --ok:#1f8a4c; --no:#c2410c;
+  --space:#0f1733; --space-line:#2b3866;
+  --display:"Bricolage Grotesque","Avenir Next","Trebuchet MS",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#17241e; --grid:#20322a; --ink:#eef4ef; --ink-soft:#a7b8ae;
+    --pen:#9db8ff; --pen-ink:#0f1830; --card:#1e2f27; --line:#33493e;
+    --sun:#f5c04a; --ok:#5fd08d; --no:#ff9a62;
+    --space:#0b1128; --space-line:#2b3866; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#17241e; --grid:#20322a; --ink:#eef4ef; --ink-soft:#a7b8ae;
+  --pen:#9db8ff; --pen-ink:#0f1830; --card:#1e2f27; --line:#33493e;
+  --sun:#f5c04a; --ok:#5fd08d; --no:#ff9a62;
+  --space:#0b1128; --space-line:#2b3866; color-scheme:dark;
+}
+body{
+  margin:0; background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:20px 20px;
+  color:var(--ink); font-family:var(--body); font-size:17px; line-height:1.5;
+}
+[hidden]{display:none!important}
+.wrap{
+  max-width:1020px; margin:0 auto; display:grid; gap:44px;
+  padding-block:28px 72px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+h1,h2,h3{font-family:var(--display); text-wrap:balance; margin:0; line-height:1.08}
+h1{font-size:clamp(38px,7vw,58px); font-weight:800; letter-spacing:-.02em}
+h2{font-size:clamp(24px,4vw,32px); font-weight:750}
+h3{font-size:18px; font-weight:750}
+p{margin:0}
+a{color:var(--pen)}
+.lede{font-size:19px; color:var(--ink-soft); max-width:54ch; margin-top:10px}
+.eyebrow{font:700 13px/1 var(--body); letter-spacing:.09em; text-transform:uppercase; color:var(--pen)}
+.sec-head{display:grid; gap:10px; max-width:64ch}
+.card{
+  background:var(--card); border:1.5px solid var(--line); border-radius:22px;
+  box-shadow:5px 5px 0 var(--line); padding:clamp(16px,3.5vw,32px); min-width:0;
+  display:grid; gap:18px;
+}
+.hint-line{color:var(--ink-soft); font-size:15px}
+
+/* scenes */
+.scenes{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px}
+.scene{display:grid; gap:6px; min-width:0}
+.scene h3{color:var(--ink-soft); font-size:15px; font-weight:700}
+.stage{position:relative; border-radius:16px; overflow:hidden; background:var(--space)}
+.stage svg{display:block; width:100%; height:auto}
+.grab{position:absolute; border-radius:50%; cursor:grab; touch-action:none; -webkit-tap-highlight-color:transparent}
+.grab:active{cursor:grabbing}
+.grab.dot{transform:translate(-50%,-50%); width:64px; height:64px}
+.svgt{font-family:var(--display); font-weight:750}
+.legend{font-size:14px; color:var(--ink-soft)}
+.legend b{font-family:var(--display)}
+
+/* controls */
+.ctl{display:flex; flex-wrap:wrap; gap:12px 18px; align-items:center}
+.slider{display:flex; align-items:center; gap:12px; flex:1 1 280px; min-width:0; font:700 16px/1 var(--display)}
+.slider input{flex:1; min-width:0; accent-color:var(--pen); height:28px}
+.clock{font:800 clamp(28px,5vw,40px)/1 var(--display); font-variant-numeric:tabular-nums; min-width:5.2ch}
+.date{font:800 clamp(22px,4vw,30px)/1 var(--display); min-width:7ch}
+.out{font-size:19px; max-width:64ch; min-height:3em}
+.out b{font-family:var(--display)}
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:0}
+.stats div{border:1.5px solid var(--line); border-radius:14px; padding:10px 12px; background:var(--paper)}
+.stats dt{font-size:13px; color:var(--ink-soft)}
+.stats dd{margin:2px 0 0; font:800 20px/1.2 var(--display); font-variant-numeric:tabular-nums}
+
+/* rules */
+.rules{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-top:14px}
+.rule{background:var(--card); border:1.5px solid var(--line); border-radius:16px; padding:18px; display:grid; gap:10px; align-content:start; min-width:0}
+.rule .verdict{font:800 21px/1.2 var(--display)}
+.rule p{font-size:16px}
+.rule .rhyme{font-style:italic; color:var(--ink-soft)}
+.rule.myth .verdict{color:var(--no)}
+
+/* trainer */
+.qtop{display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; font:700 15px/1 var(--display); color:var(--ink-soft)}
+.bar-p{height:8px; border-radius:99px; background:var(--line); overflow:hidden; margin-top:8px}
+.bar-p i{display:block; height:100%; width:0; background:var(--pen); border-radius:99px; transition:width .3s}
+.qstage{display:grid; gap:14px}
+.task{font-size:clamp(21px,3vw,26px); line-height:1.5; max-width:42ch; font-weight:700}
+.ops{display:grid; gap:10px; max-width:680px}
+.op{
+  font:650 clamp(17px,2.4vw,20px)/1.35 var(--display); text-align:left;
+  padding:13px 16px; border-radius:14px; border:2px solid var(--line); background:var(--paper); color:var(--ink); cursor:pointer;
+}
+.op:hover{border-color:var(--pen)}
+.op.right{border-color:var(--ok); background:color-mix(in srgb,var(--ok) 14%,var(--card)); color:var(--ok)}
+.op.wrong{border-color:var(--no); color:var(--no); opacity:.7}
+.op:disabled{cursor:default}
+.say{font-size:19px; min-height:1.6em; max-width:64ch}
+.say.ok{color:var(--ok)} .say.no{color:var(--no)}
+.done{font:750 clamp(26px,5vw,38px)/1.15 var(--display)}
+.controls{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+/* Pulsing ring on the button that reveals the next step. */
+.nudge:not(:disabled){animation:nudge 1.8s ease-out infinite}
+@keyframes nudge{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--pen) 55%,transparent)}70%,100%{box-shadow:0 0 0 12px color-mix(in srgb,var(--pen) 0%,transparent)}}
+.btn{
+  font:700 19px/1 var(--display); border-radius:14px; padding:14px 22px; cursor:pointer;
+  border:2px solid var(--pen); background:var(--pen); color:var(--pen-ink);
+}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent; color:var(--pen)}
+.btn:focus-visible,.op:focus-visible{outline:3px solid var(--pen); outline-offset:2px}
+
+footer{color:var(--ink-soft); font-size:15px; display:flex; flex-wrap:wrap; gap:6px 18px}
+
+@media (max-width:760px){
+  .scenes,.rules{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:640px){
+  .btn{font-size:17px; padding:12px 18px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important; animation:none!important}
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <div class="eyebrow">Erde und Sonne</div>
+    <h1>Tag, Nacht und Jahreszeiten</h1>
+    <p class="lede">Die Sonne scheint immer. Dass es Nacht wird und Winter, liegt an der Erde: Sie dreht sich, sie wandert um die Sonne, und sie steht ein bisschen schräg.</p>
+  </header>
+
+  <section class="card" aria-labelledby="day-title">
+    <div class="sec-head">
+      <div class="eyebrow">Ein Tag</div>
+      <h2 id="day-title">Warum wird es Nacht?</h2>
+      <p class="hint-line">Dreh die Erde mit dem Finger, schieb die Uhrzeit oder drück auf „Erde drehen“. Das Haus sind wir.</p>
+    </div>
+    <div class="scenes">
+      <div class="scene">
+        <h3>Von oben auf den Nordpol geschaut</h3>
+        <div class="stage" id="top-stage"><div id="top"></div><div class="grab" id="top-grab" aria-hidden="true"></div></div>
+      </div>
+      <div class="scene">
+        <h3>Am Haus: Blick nach Süden</h3>
+        <div class="stage"><div id="sky"></div></div>
+      </div>
+    </div>
+    <div class="ctl">
+      <button class="btn nudge" type="button" id="d-play">Erde drehen</button>
+      <label class="slider"><span class="clock" id="d-clock">12:00</span><input type="range" id="d-time" min="0" max="1439" step="1" value="720" aria-label="Uhrzeit"></label>
+    </div>
+    <p class="out" id="d-out" aria-live="polite"></p>
+  </section>
+
+  <section aria-labelledby="day-rules">
+    <div class="sec-head">
+      <div class="eyebrow">Merke</div>
+      <h2 id="day-rules">Die Sonne steht still, die Erde dreht sich</h2>
+    </div>
+    <div class="rules">
+      <div class="rule"><div class="verdict">Es sieht nur so aus</div><p>Die Sonne scheint über den Himmel zu wandern. In Wirklichkeit dreht sich die Erde. Wie im Karussell: Du drehst dich, aber es sieht aus, als würde sich alles um dich herum bewegen.</p></div>
+      <div class="rule"><div class="verdict">Einmal drehen dauert einen Tag</div><p>Die Erde dreht sich in 24 Stunden einmal um sich selbst. Die Hälfte, die zur Sonne zeigt, hat Tag. Die andere Hälfte hat Nacht. Irgendwo ist also immer Tag.</p></div>
+      <div class="rule"><div class="verdict">Im Osten geht sie auf</div><p>Die Erde dreht sich nach Osten. Darum taucht die Sonne im Osten auf, steht mittags im Süden und verschwindet im Westen.</p><p class="rhyme">Im Osten geht die Sonne auf, im Süden nimmt sie ihren Lauf, im Westen will sie untergehen, im Norden ist sie nie zu sehen.</p></div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="year-title">
+    <div class="sec-head">
+      <div class="eyebrow">Ein Jahr</div>
+      <h2 id="year-title">Warum gibt es Sommer und Winter?</h2>
+      <p class="hint-line">Zieh die Erde um die Sonne, schieb das Datum oder drück auf „Ein Jahr abspielen“. Achte auf die schräge Achse: Sie zeigt immer in dieselbe Richtung.</p>
+    </div>
+    <div class="scene">
+      <h3>Die Erde auf ihrer Bahn um die Sonne</h3>
+      <div class="stage" id="orbit-stage"><div id="orbit"></div><div class="grab dot" id="orbit-grab" aria-hidden="true"></div></div>
+    </div>
+    <div class="ctl">
+      <button class="btn nudge" type="button" id="y-play">Ein Jahr abspielen</button>
+      <label class="slider"><span class="date" id="y-date">21. Juni</span><input type="range" id="y-day" min="0" max="364" step="1" value="171" aria-label="Datum"></label>
+    </div>
+    <div class="scenes">
+      <div class="scene">
+        <h3>Von der Seite: Licht kommt von links</h3>
+        <div class="stage"><div id="side"></div></div>
+        <p class="legend"><b style="color:#f2a516">Gelbe Linie</b>: unser Weg durch einen Tag. Durchgezogen ist Tag, gestrichelt ist Nacht. <b style="color:#2fa595">Türkis</b>: Australien.</p>
+      </div>
+      <div class="scene">
+        <h3>Mittags bei uns</h3>
+        <div class="stage"><div id="noon"></div></div>
+        <p class="legend">Je höher die Sonne steht, desto kleiner ist der Licht-Fleck. Das gleiche Licht trifft dann auf weniger Boden und wärmt ihn stärker.</p>
+      </div>
+    </div>
+    <dl class="stats" id="y-stats"></dl>
+    <p class="out" id="y-out" aria-live="polite"></p>
+  </section>
+
+  <section aria-labelledby="year-rules">
+    <div class="sec-head">
+      <div class="eyebrow">Merke</div>
+      <h2 id="year-rules">Die schräge Achse macht die Jahreszeiten</h2>
+    </div>
+    <div class="rules">
+      <div class="rule"><div class="verdict">Schräg, und immer gleich schräg</div><p>Die Erdachse steht schräg und zeigt immer in dieselbe Richtung, zum Polarstern. Im Juni ist darum unsere Hälfte der Erde zur Sonne geneigt, im Dezember von ihr weg.</p></div>
+      <div class="rule"><div class="verdict">Hohe Sonne, lange Tage</div><p>Im Sommer steht die Sonne mittags hoch. Ihr Licht trifft steil auf und wärmt stark. Und der Tag ist lang, die Sonne hat also viele Stunden Zeit zum Wärmen.</p></div>
+      <div class="rule myth"><div class="verdict">Falsch: „Im Sommer ist die Erde näher an der Sonne.“</div><p>Stimmt nicht! Anfang Januar ist die Erde der Sonne sogar am nächsten. Und wenn bei uns Sommer ist, ist in Australien Winter, zur selben Zeit auf derselben Erde.</p></div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="q-title">
+    <div class="eyebrow">Jetzt du</div>
+    <h2 id="q-title">10 Fragen</h2>
+    <div>
+      <div class="qtop"><span id="qpos"></span><span id="qscore"></span></div>
+      <div class="bar-p"><i id="qbar"></i></div>
+    </div>
+    <div id="qbody" class="qstage"></div>
+  </section>
+
+  <footer>
+    <a href="index.html">← Alle Übungen</a>
+  </footer>
+</main>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const shuffle = arr => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const rad = d => d * Math.PI / 180, deg = r => r * 180 / Math.PI;
+  const mod = (v, m) => ((v % m) + m) % m;
+  const f1 = v => v.toFixed(1);
+  const mix = (a, b, k) => a.map((x, i) => Math.round(x + (b[i] - x) * k));
+  const rgb = c => `rgb(${c[0]},${c[1]},${c[2]})`;
+  const LAT = 51; // Deutschland
+  const LAT_AU = -27; // Australien (Brisbane)
+
+  // pointer position in viewBox coordinates
+  function svgPoint(svg, e){
+    const r = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal;
+    return {x:(e.clientX - r.left) / (r.width || 1) * vb.width, y:(e.clientY - r.top) / (r.height || 1) * vb.height};
+  }
+  function dragger(el, onMove){
+    let on = false;
+    el.addEventListener('pointerdown', e => { on = true; try { el.setPointerCapture(e.pointerId); } catch (_){} onMove(e); e.preventDefault(); });
+    el.addEventListener('pointermove', e => { if (on) onMove(e); });
+    const end = () => { on = false; };
+    el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
+  }
+
+  // ======================= DAY =======================
+  const D = {t:12, play:false};
+  const TV = {W:400, H:320, cx:255, cy:160, r:100};
+  const SUN_DEFS = `<defs><radialGradient id="sg" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff6c8"/><stop offset=".55" stop-color="#ffd257"/><stop offset="1" stop-color="#ffb21e"/></radialGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset=".5" stop-color="#ffc83d" stop-opacity=".45"/><stop offset="1" stop-color="#ffc83d" stop-opacity="0"/></radialGradient>
+    <marker id="ah" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#ffd257"/></marker>
+    <marker id="ahw" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#cfd8ff"/></marker></defs>`;
+  const STARS = (W, H, n, seed) => { let s = '', x = seed; for (let i = 0; i < n; i++){ x = (x * 9301 + 49297) % 233280; const a = x / 233280; x = (x * 9301 + 49297) % 233280; const b = x / 233280; s += `<circle cx="${(a * W).toFixed(1)}" cy="${(b * H).toFixed(1)}" r="${(0.6 + (i % 3) * 0.4).toFixed(1)}" fill="#fff" opacity="${0.35 + (i % 4) * 0.15}"/>`; } return s; };
+  const BLOBS = [[35, .62, 26, 16, 20], [120, .55, 30, 18, -30], [200, .66, 22, 14, 60], [290, .58, 28, 15, 10], [330, .78, 14, 9, 40]];
+
+  function topSVG(t){
+    const {W, H, cx, cy, r} = TV;
+    const a = 180 + (t - 12) * 15; // ccw angle (math) of our house; noon points to the sun (left)
+    let s = SUN_DEFS + `<rect width="${W}" height="${H}" fill="#0f1733"/>` + STARS(W, H, 40, 7);
+    s += `<circle cx="-30" cy="${cy}" r="140" fill="url(#glow)"/><circle cx="-30" cy="${cy}" r="92" fill="url(#sg)"/>`;
+    s += `<text class="svgt" x="22" y="${cy + 6}" font-size="17" fill="#7a4a00">Sonne</text>`;
+    [70, 115, 160, 205, 250].forEach(y => { s += `<line x1="78" y1="${y}" x2="138" y2="${y}" stroke="#ffd257" stroke-width="2.5" stroke-dasharray="6 5" marker-end="url(#ah)"/>`; });
+    // earth (rotating part)
+    s += `<clipPath id="ec"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath>`;
+    s += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#2f6fb5"/>`;
+    s += `<g clip-path="url(#ec)"><g transform="rotate(${f1(-a)} ${cx} ${cy})">`;
+    BLOBS.forEach(([ang, rr, w, h, rot]) => {
+      const x = cx + Math.cos(rad(ang)) * r * rr, y = cy - Math.sin(rad(ang)) * r * rr;
+      s += `<ellipse cx="${f1(x)}" cy="${f1(y)}" rx="${w}" ry="${h}" transform="rotate(${rot} ${f1(x)} ${f1(y)})" fill="#4fae6b"/>`;
+    });
+    s += `<circle cx="${cx}" cy="${cy}" r="20" fill="#eef4ff"/>`;
+    s += `</g></g>`;
+    // night half (fixed: away from the sun)
+    s += `<path d="M${cx} ${cy - r}A${r} ${r} 0 0 1 ${cx} ${cy + r}Z" fill="#03061a" opacity=".62"/>`;
+    s += `<line x1="${cx}" y1="${cy - r}" x2="${cx}" y2="${cy + r}" stroke="#ffd257" stroke-width="1.5" opacity=".5"/>`;
+    s += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#cfd8ff" stroke-width="1.5" opacity=".7"/>`;
+    s += `<circle cx="${cx}" cy="${cy}" r="3" fill="#1a2342"/>`;
+    // our house sits on the surface and turns with the earth
+    s += `<g transform="rotate(${f1(-a)} ${cx} ${cy})"><polygon points="${cx + r - 3},${cy - 9} ${cx + r + 9},${cy - 9} ${cx + r + 18},${cy} ${cx + r + 9},${cy + 9} ${cx + r - 3},${cy + 9}" fill="#ff7a59" stroke="#ffffff" stroke-width="1.5"/></g>`;
+    // rotation arrow
+    const R2 = r + 16, P = d => `${f1(cx + R2 * Math.cos(rad(d)))} ${f1(cy - R2 * Math.sin(rad(d)))}`;
+    s += `<path d="M${P(25)}A${R2} ${R2} 0 0 0 ${P(70)}" fill="none" stroke="#cfd8ff" stroke-width="2" marker-end="url(#ahw)"/>`;
+    // labels
+    const lx = cx + (r + 34) * Math.cos(rad(a)), ly = cy - (r + 34) * Math.sin(rad(a));
+    s += `<text class="svgt" x="${f1(lx)}" y="${f1(ly + 6)}" font-size="16" text-anchor="middle" fill="#ff9a7c">Wir</text>`;
+    s += `<text class="svgt" x="${cx - r / 2}" y="${cy + r + 30}" font-size="16" text-anchor="middle" fill="#ffd257">Tag</text>`;
+    s += `<text class="svgt" x="${cx + r / 2}" y="${cy + r + 30}" font-size="16" text-anchor="middle" fill="#9aa6d8">Nacht</text>`;
+    s += `<text class="svgt" x="${cx}" y="${cy - 26}" font-size="12" text-anchor="middle" fill="#ffffff">Nordpol</text>`;
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Die Erde von oben, links die Sonne. Unser Haus ist auf der ${isDay(t) ? 'Tag' : 'Nacht'}seite.">${s}</svg>`;
+  }
+  const isDay = t => t >= 6 && t < 18;
+  const DAY = [140, 200, 240], DUSK = [245, 160, 110], NIGHT = [13, 20, 48];
+  function skySVG(t){
+    const W = 400, H = 320, hz = 250, th = (t - 6) / 12 * Math.PI, e = Math.sin(th);
+    const sx = 200 - 160 * Math.cos(th), sy = hz - 136 * e;
+    const col = e >= .25 ? DAY : e >= 0 ? mix(DUSK, DAY, e / .25) : e >= -.2 ? mix(NIGHT, DUSK, (e + .2) / .2) : NIGHT;
+    let s = SUN_DEFS + `<rect width="${W}" height="${hz}" fill="${rgb(col)}"/>`;
+    s += `<g opacity="${clamp(-e * 4, 0, 1).toFixed(2)}">${STARS(W, hz - 20, 45, 3)}</g>`;
+    s += `<path d="M40 ${hz}A160 136 0 0 1 360 ${hz}" fill="none" stroke="#ffffff" stroke-opacity=".35" stroke-width="1.5" stroke-dasharray="4 6"/>`;
+    s += `<clipPath id="above"><rect width="${W}" height="${hz}"/></clipPath>`;
+    s += `<g clip-path="url(#above)"><circle cx="${f1(sx)}" cy="${f1(sy)}" r="44" fill="url(#glow)"/><circle cx="${f1(sx)}" cy="${f1(sy)}" r="22" fill="url(#sg)"/></g>`;
+    const g = e >= 0 ? [86, 160, 90] : mix([18, 40, 30], [86, 160, 90], clamp((e + .2) / .2, 0, 1));
+    s += `<path d="M0 ${hz}Q100 ${hz - 14} 200 ${hz - 4}T400 ${hz - 6}V${H}H0Z" fill="${rgb(g)}"/>`;
+    // house
+    s += `<g transform="translate(200 ${hz - 4})"><rect x="-20" y="-30" width="40" height="30" fill="#ff7a59" stroke="#1a2342" stroke-width="1.5"/><polygon points="-26,-30 0,-50 26,-30" fill="#b8452c" stroke="#1a2342" stroke-width="1.5"/>` +
+         `<rect x="-6" y="-16" width="12" height="16" fill="#1a2342"/><rect x="-16" y="-24" width="8" height="8" fill="${e > 0 ? '#cfe6ff' : '#ffd257'}"/><rect x="8" y="-24" width="8" height="8" fill="${e > 0 ? '#cfe6ff' : '#ffd257'}"/></g>`;
+    const lab = (x, txt) => `<text class="svgt" x="${x}" y="${H - 18}" font-size="16" text-anchor="middle" fill="#ffffff">${txt}</text>`;
+    s += lab(40, 'Osten') + lab(200, 'Süden') + lab(360, 'Westen');
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Himmel über unserem Haus um ${clock(t)} Uhr">${s}</svg>`;
+  }
+  const clock = t => { const m = Math.round(mod(t, 24) * 60) % 1440; return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; };
+  function dayText(t){
+    t = mod(t, 24);
+    if (t >= 23.5 || t < .5) return '<b>Mitternacht.</b> Unser Haus zeigt genau von der Sonne weg. Auf der anderen Seite der Erde ist jetzt Mittag.';
+    if (t >= 5.5 && t < 6.5) return '<b>Sonnenaufgang!</b> Die Erde dreht unser Haus gerade aus dem Schatten ins Licht. Die Sonne taucht im Osten auf.';
+    if (t >= 11.5 && t < 12.5) return '<b>Mittag.</b> Unser Haus zeigt genau zur Sonne. Darum steht sie jetzt am höchsten, im Süden.';
+    if (t >= 17.5 && t < 18.5) return '<b>Sonnenuntergang.</b> Die Erde dreht unser Haus in den Schatten. Die Sonne verschwindet im Westen.';
+    if (t >= 6.5 && t < 11.5) return '<b>Vormittag.</b> Unser Haus dreht sich auf die Sonne zu. Sie steigt am Himmel immer höher.';
+    if (t >= 12.5 && t < 17.5) return '<b>Nachmittag.</b> Unser Haus dreht sich von der Sonne weg. Sie sinkt nach Westen.';
+    return '<b>Nacht.</b> Unser Haus ist auf der Seite, die von der Sonne weg zeigt. Hier ist es dunkel, auf der anderen Seite der Erde ist Tag.';
+  }
+  function drawDay(){
+    $('#top').innerHTML = topSVG(D.t);
+    $('#sky').innerHTML = skySVG(D.t);
+    $('#d-clock').textContent = clock(D.t);
+    $('#d-time').value = Math.round(mod(D.t, 24) * 60) % 1440;
+    $('#d-out').innerHTML = dayText(D.t);
+  }
+  const g = $('#top-grab'), {W:TW, H:TH, cx:TCX, cy:TCY, r:TR} = TV;
+  Object.assign(g.style, {left:`${(TCX - TR - 10) / TW * 100}%`, top:`${(TCY - TR - 10) / TH * 100}%`, width:`${(2 * TR + 20) / TW * 100}%`, height:`${(2 * TR + 20) / TH * 100}%`});
+  dragger(g, e => {
+    const svg = $('#top svg'); if (!svg) return;
+    const p = svgPoint(svg, e), a = deg(Math.atan2(-(p.y - TCY), p.x - TCX));
+    stopDay(); D.t = mod(12 + (a - 180) / 15, 24); drawDay();
+  });
+  $('#d-time').addEventListener('input', e => { stopDay(); D.t = +e.target.value / 60; drawDay(); });
+  function stopDay(){ D.play = false; $('#d-play').textContent = 'Erde drehen'; }
+  $('#d-play').addEventListener('click', () => {
+    $('#d-play').classList.remove('nudge');
+    D.play = !D.play; $('#d-play').textContent = D.play ? 'Anhalten' : 'Erde drehen'; if (D.play) loop();
+  });
+
+  // ======================= YEAR =======================
+  const Y = {d:171, play:false};
+  const MN = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+  const MD = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  function dateOf(d){ d = Math.round(mod(d, 365)) % 365; let m = 0; while (d >= MD[m]){ d -= MD[m]; m++; } return `${d + 1}. ${MN[m]}`; }
+  const decl = d => 23.44 * Math.sin(2 * Math.PI * (d - 79) / 365);
+  const dayLen = (lat, dc) => { const x = -Math.tan(rad(lat)) * Math.tan(rad(dc)); return x <= -1 ? 24 : x >= 1 ? 0 : 24 / Math.PI * Math.acos(x); };
+  const noonAlt = (lat, dc) => 90 - Math.abs(lat - dc);
+  const season = d => d >= 78 && d < 171 ? 'Frühling' : d >= 171 && d < 265 ? 'Sommer' : d >= 265 && d < 354 ? 'Herbst' : 'Winter';
+  const OPP = {'Frühling':'Herbst', 'Sommer':'Winter', 'Herbst':'Frühling', 'Winter':'Sommer'};
+  const hm = h => { const m = Math.round(h * 60); return `${Math.floor(m / 60)} Std. ${m % 60} Min.`; };
+  const OV = {W:520, H:300, cx:260, cy:150, rx:205, ry:100};
+  const beta = d => 180 + (d - 171) / 365 * 360;
+  const TILT = rad(23.44), AX = [Math.sin(TILT), -Math.cos(TILT)];
+
+  function orbitSVG(d){
+    const {W, H, cx, cy, rx, ry} = OV, b = rad(beta(d));
+    const ex = cx + rx * Math.cos(b), ey = cy - ry * Math.sin(b), er = 22 - 6 * Math.sin(b);
+    let s = SUN_DEFS + `<rect width="${W}" height="${H}" fill="#0f1733"/>` + STARS(W, H, 60, 11);
+    s += `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="none" stroke="#cfd8ff" stroke-opacity=".45" stroke-width="1.5" stroke-dasharray="5 6"/>`;
+    const marks = [[171, '21. Juni', 0, 50], [265, '23. Sept.', 0, 42], [354, '21. Dez.', 0, 50], [78, '20. März', 0, -32]];
+    marks.forEach(([md, txt, dx, dy]) => {
+      const bb = rad(beta(md)), x = cx + rx * Math.cos(bb), y = cy - ry * Math.sin(bb);
+      s += `<circle cx="${f1(x)}" cy="${f1(y)}" r="3.5" fill="#cfd8ff" opacity=".7"/><text class="svgt" x="${f1(x + dx)}" y="${f1(y + dy)}" font-size="16" text-anchor="middle" fill="#cfd8ff">${txt}</text>`;
+    });
+    const behind = Math.sin(b) > 0;
+    const sun = `<circle cx="${cx}" cy="${cy}" r="70" fill="url(#glow)"/><circle cx="${cx}" cy="${cy}" r="34" fill="url(#sg)"/><text class="svgt" x="${cx}" y="${cy + 5}" font-size="15" text-anchor="middle" fill="#7a4a00">Sonne</text>`;
+    const ps = deg(Math.atan2(ey - cy, ex - cx));
+    let earth = `<circle cx="${f1(ex)}" cy="${f1(ey)}" r="${f1(er)}" fill="#2f6fb5"/>`;
+    earth += `<path d="M0 ${-er}A${er} ${er} 0 0 1 0 ${er}Z" transform="translate(${f1(ex)} ${f1(ey)}) rotate(${f1(ps)})" fill="#03061a" opacity=".6"/>`;
+    const L = er * 1.7;
+    earth += `<line x1="${f1(ex - AX[0] * L)}" y1="${f1(ey - AX[1] * L)}" x2="${f1(ex + AX[0] * L)}" y2="${f1(ey + AX[1] * L)}" stroke="#ffffff" stroke-width="2"/>`;
+    earth += `<text class="svgt" x="${f1(ex + AX[0] * (L + 9))}" y="${f1(ey + AX[1] * (L + 9) + 4)}" font-size="13" text-anchor="middle" fill="#ffffff">N</text>`;
+    s += behind ? earth + sun : sun + earth;
+    s += `<g opacity=".8"><text class="svgt" x="${W - 12}" y="24" font-size="14" text-anchor="end" fill="#cfd8ff">zum Polarstern ★</text>` +
+         `<line x1="${W - 46}" y1="76" x2="${f1(W - 46 + AX[0] * 40)}" y2="${f1(76 + AX[1] * 40)}" stroke="#cfd8ff" stroke-width="1.5" stroke-dasharray="4 4"/></g>`;
+    return {svg:`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Die Erde auf ihrer Bahn um die Sonne am ${dateOf(d)}">${s}</svg>`, ex, ey};
+  }
+  function sideSVG(dc){
+    const W = 320, H = 260, cx = 185, cy = 132, r = 90, dr = rad(dc);
+    const n = [-Math.sin(dr), -Math.cos(dr)], p = [Math.cos(dr), -Math.sin(dr)];
+    let s = `<rect width="${W}" height="${H}" fill="#0f1733"/>` + STARS(W, H, 25, 5) + SUN_DEFS;
+    [50, 92, 132, 172, 214].forEach(y => { s += `<line x1="8" y1="${y}" x2="70" y2="${y}" stroke="#ffd257" stroke-width="2.5" stroke-dasharray="6 5" marker-end="url(#ah)"/>`; });
+    s += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#2f6fb5"/>`;
+    s += `<path d="M${cx} ${cy - r}A${r} ${r} 0 0 1 ${cx} ${cy + r}Z" fill="#03061a" opacity=".62"/>`;
+    // equator
+    s += `<line x1="${f1(cx - p[0] * r)}" y1="${f1(cy - p[1] * r)}" x2="${f1(cx + p[0] * r)}" y2="${f1(cy + p[1] * r)}" stroke="#cfd8ff" stroke-opacity=".4" stroke-width="1.2" stroke-dasharray="3 4"/>`;
+    const latLine = (lat, col) => {
+      const c0 = [cx + n[0] * r * Math.sin(rad(lat)), cy + n[1] * r * Math.sin(rad(lat))], hl = r * Math.cos(rad(lat));
+      const P = sv => [c0[0] + p[0] * sv, c0[1] + p[1] * sv];
+      const sStar = clamp((cx - c0[0]) / p[0], -hl, hl);
+      const A = P(-hl), M = P(sStar), B = P(hl);
+      return `<line x1="${f1(A[0])}" y1="${f1(A[1])}" x2="${f1(M[0])}" y2="${f1(M[1])}" stroke="${col}" stroke-width="4" stroke-linecap="round"/>` +
+             `<line x1="${f1(M[0])}" y1="${f1(M[1])}" x2="${f1(B[0])}" y2="${f1(B[1])}" stroke="${col}" stroke-width="2.5" stroke-dasharray="4 5" opacity=".75"/>` +
+             `<circle cx="${f1(A[0])}" cy="${f1(A[1])}" r="5" fill="${col}" stroke="#0f1733" stroke-width="1.5"/>`;
+    };
+    s += latLine(LAT_AU, '#2fa595') + latLine(LAT, '#f2a516');
+    // axis
+    const L = r * 1.22;
+    s += `<line x1="${f1(cx - n[0] * L)}" y1="${f1(cy - n[1] * L)}" x2="${f1(cx + n[0] * L)}" y2="${f1(cy + n[1] * L)}" stroke="#ffffff" stroke-width="2"/>`;
+    s += `<text class="svgt" x="${f1(cx + n[0] * (L + 10))}" y="${f1(cy + n[1] * (L + 10) + 4)}" font-size="13" text-anchor="middle" fill="#ffffff">N</text>`;
+    s += `<circle cx="${f1(cx + n[0] * r)}" cy="${f1(cy + n[1] * r)}" r="4" fill="#ffffff"/>`;
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Die Erde von der Seite, die Achse ist um ${Math.round(Math.abs(dc))} Grad ${dc >= 0 ? 'zur Sonne' : 'von der Sonne weg'} geneigt">${s}</svg>`;
+  }
+  function noonSVG(alt){
+    const W = 420, H = 260, gy = 214, xf = 160, A = rad(alt), D2 = 140;
+    const sx = xf - D2 * Math.cos(A), sy = gy - D2 * Math.sin(A);
+    const k = clamp((alt - 10) / 55, 0, 1);
+    let s = SUN_DEFS + `<rect width="${W}" height="${gy}" fill="${rgb(mix([120, 170, 220], [130, 200, 245], k))}"/>`;
+    // light band
+    const w = 34, Lf = w / Math.sin(A), dx = Math.cos(A), dy = Math.sin(A);
+    const g1 = [xf - Lf / 2, gy], g2 = [xf + Lf / 2, gy], back = 400;
+    s += `<polygon points="${f1(g1[0])},${gy} ${f1(g2[0])},${gy} ${f1(g2[0] - dx * back)},${f1(gy - dy * back)} ${f1(g1[0] - dx * back)},${f1(gy - dy * back)}" fill="#ffe680" opacity=".45"/>`;
+    s += `<circle cx="${f1(sx)}" cy="${f1(sy)}" r="40" fill="url(#glow)"/><circle cx="${f1(sx)}" cy="${f1(sy)}" r="20" fill="url(#sg)"/>`;
+    s += `<rect x="0" y="${gy}" width="${W}" height="${H - gy}" fill="#5aa05e"/>`;
+    s += `<line x1="${f1(g1[0])}" y1="${gy + 3}" x2="${f1(g2[0])}" y2="${gy + 3}" stroke="#ffd257" stroke-width="6" stroke-linecap="round"/>`;
+    s += `<text class="svgt" x="${xf}" y="${gy + 30}" font-size="14" text-anchor="middle" fill="#ffffff">Licht-Fleck</text>`;
+    // angle arc between ground and the middle sun ray
+    s += `<line x1="${xf}" y1="${gy}" x2="${f1(sx)}" y2="${f1(sy)}" stroke="#1a2342" stroke-width="1.5" stroke-dasharray="5 5" opacity=".55"/>`;
+    const R = 62, ax = xf - R * Math.cos(A), ay = gy - R * Math.sin(A);
+    s += `<path d="M${xf - R} ${gy}A${R} ${R} 0 0 1 ${f1(ax)} ${f1(ay)}" fill="none" stroke="#1a2342" stroke-width="2"/>`;
+    s += `<text class="svgt" x="${f1(xf - (R + 22) * Math.cos(A / 2))}" y="${f1(Math.min(gy - 8, gy - (R + 10) * Math.sin(A / 2) + 4))}" font-size="16" text-anchor="middle" fill="#1a2342">${Math.round(alt)}°</text>`;
+    // tree and shadow
+    const tx = 290, th = 40, sh = Math.min(th / Math.tan(A), W - tx - 4);
+    s += `<line x1="${tx}" y1="${gy + 1}" x2="${f1(tx + sh)}" y2="${gy + 1}" stroke="#1a2342" stroke-opacity=".45" stroke-width="7" stroke-linecap="round"/>`;
+    s += `<rect x="${tx - 3}" y="${gy - th + 14}" width="6" height="${th - 14}" fill="#6b4226"/><circle cx="${tx}" cy="${gy - th + 6}" r="13" fill="#2f7d3a"/>`;
+    s += `<text class="svgt" x="${f1(tx + Math.max(sh, 40) / 2)}" y="${gy + 30}" font-size="14" text-anchor="middle" fill="#ffffff">Schatten</text>`;
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Mittags steht die Sonne ${Math.round(alt)} Grad hoch">${s}</svg>`;
+  }
+  function yearText(d){
+    const near = (x, w = 8) => Math.abs(mod(d - x + 182, 365) - 182) <= w;
+    const dc = decl(d), rising = decl(d + 1) > dc;
+    if (near(171)) return '<b>Sommeranfang.</b> Unsere Hälfte der Erde ist am stärksten zur Sonne geneigt. Die Sonne steht mittags so hoch wie sonst nie, und der Tag ist der längste im Jahr. Am Nordpol geht die Sonne gar nicht unter.';
+    if (near(354)) return '<b>Winteranfang.</b> Unsere Hälfte der Erde ist am stärksten von der Sonne weg geneigt. Die Sonne steht mittags tief, und der Tag ist der kürzeste im Jahr. Am Nordpol bleibt es den ganzen Tag dunkel.';
+    if (near(78)) return '<b>Frühlingsanfang.</b> Die Achse ist weder zur Sonne hin noch von ihr weg geneigt. Tag und Nacht sind überall auf der Erde ungefähr gleich lang: je 12 Stunden.';
+    if (near(265)) return '<b>Herbstanfang.</b> Die Achse ist weder zur Sonne hin noch von ihr weg geneigt. Tag und Nacht sind überall auf der Erde ungefähr gleich lang: je 12 Stunden.';
+    if (near(2, 4)) return '<b>Anfang Januar</b> ist die Erde der Sonne am nächsten. Trotzdem ist bei uns Winter, weil unsere Hälfte von der Sonne weg geneigt ist.';
+    return `Unsere Hälfte der Erde ist ${dc > 0 ? '<b>zur Sonne hin</b>' : '<b>von der Sonne weg</b>'} geneigt. Die Tage werden ${rising ? '<b>länger</b>, die Sonne steigt mittags jeden Tag ein bisschen höher' : '<b>kürzer</b>, die Sonne steht mittags jeden Tag ein bisschen tiefer'}.`;
+  }
+  function drawYear(){
+    const d = Y.d, dc = decl(d);
+    const o = orbitSVG(d);
+    $('#orbit').innerHTML = o.svg;
+    const og = $('#orbit-grab'); og.style.left = `${o.ex / OV.W * 100}%`; og.style.top = `${o.ey / OV.H * 100}%`;
+    $('#side').innerHTML = sideSVG(dc);
+    const alt = noonAlt(LAT, dc);
+    $('#noon').innerHTML = noonSVG(alt);
+    $('#y-date').textContent = dateOf(d);
+    $('#y-day').value = Math.round(mod(d, 365)) % 365;
+    const se = season(Math.round(mod(d, 365)) % 365);
+    const pole = dc > .5 ? 'immer hell' : dc < -.5 ? 'immer dunkel' : 'Sonne am Horizont';
+    $('#y-stats').innerHTML = [
+      ['Bei uns ist', se], ['Der Tag dauert', hm(dayLen(LAT, dc))], ['Sonne mittags', `${Math.round(alt)}° hoch`],
+      ['In Australien ist', OPP[se]], ['Am Nordpol', pole]
+    ].map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+    $('#y-out').innerHTML = yearText(d);
+  }
+  dragger($('#orbit-grab'), e => {
+    const svg = $('#orbit svg'); if (!svg) return;
+    const p = svgPoint(svg, e), b = deg(Math.atan2(-(p.y - OV.cy) / OV.ry, (p.x - OV.cx) / OV.rx));
+    stopYear(); Y.d = mod(171 + (b - 180) / 360 * 365, 365); drawYear();
+  });
+  $('#y-day').addEventListener('input', e => { stopYear(); Y.d = +e.target.value; drawYear(); });
+  function stopYear(){ Y.play = false; $('#y-play').textContent = 'Ein Jahr abspielen'; }
+  $('#y-play').addEventListener('click', () => {
+    $('#y-play').classList.remove('nudge');
+    Y.play = !Y.play; $('#y-play').textContent = Y.play ? 'Anhalten' : 'Ein Jahr abspielen'; if (Y.play) loop();
+  });
+
+  // ======================= animation loop =======================
+  let last = 0, running = false;
+  function loop(){
+    if (running) return; running = true; last = performance.now();
+    const step = now => {
+      const dt = Math.min(.1, (now - last) / 1000); last = now;
+      if (D.play){ D.t = mod(D.t + dt * 2, 24); drawDay(); }
+      if (Y.play){ Y.d = mod(Y.d + dt * 18, 365); drawYear(); }
+      if (D.play || Y.play) requestAnimationFrame(step); else running = false;
+    };
+    requestAnimationFrame(step);
+  }
+
+  // ======================= quiz =======================
+  const QS = [
+    {q:'Warum wird es Nacht?', a:'Die Erde dreht sich, und unser Haus kommt auf die Seite, die von der Sonne weg zeigt.',
+     w:['Die Sonne kreist um die Erde und ist dann auf der anderen Seite.', 'Abends schieben sich Wolken vor die Sonne.'],
+     ex:'Die Sonne steht still. Die Erde dreht sich, und nachts zeigt unser Haus von der Sonne weg.', show:{day:22}},
+    {q:'Wie lange dauert es, bis sich die Erde einmal um sich selbst gedreht hat?', a:'24 Stunden, also einen Tag', w:['Eine Woche', 'Ein Jahr'],
+     ex:'Eine Drehung ist ein Tag mit Nacht: 24 Stunden.', show:{day:6}},
+    {q:'Wo geht die Sonne auf?', a:'Im Osten', w:['Im Westen', 'Im Norden'],
+     ex:'Die Erde dreht sich nach Osten. Darum taucht die Sonne im Osten auf.', show:{day:6}},
+    {q:'Bei uns ist es 12 Uhr mittags. Wie spät ist es ungefähr auf der anderen Seite der Erde?', a:'Mitternacht', w:['Auch 12 Uhr mittags', '6 Uhr morgens'],
+     ex:'Die andere Seite der Erde zeigt genau von der Sonne weg. Dort ist es mitten in der Nacht.', show:{day:12}},
+    {q:'Wie lange braucht die Erde einmal um die Sonne herum?', a:'Ein Jahr', w:['Einen Tag', 'Einen Monat'],
+     ex:'Eine Runde um die Sonne dauert ein Jahr, ungefähr 365 Tage.', show:{year:78}},
+    {q:'Warum ist es im Sommer wärmer als im Winter?', a:'Unsere Hälfte der Erde ist zur Sonne geneigt: Die Sonne steht höher, und die Tage sind länger.',
+     w:['Die Erde ist im Sommer näher an der Sonne.', 'Die Sonne brennt im Sommer stärker.'],
+     ex:'Es liegt an der schrägen Achse. Hohe Sonne und lange Tage bringen mehr Wärme.', show:{year:171}},
+    {q:'Bei uns ist Sommer. Welche Jahreszeit ist in Australien?', a:'Winter', w:['Auch Sommer', 'Frühling'],
+     ex:'Wenn die Nordhälfte zur Sonne geneigt ist, ist die Südhälfte von ihr weg geneigt.', show:{year:171}},
+    {q:'Wann steht die Sonne bei uns mittags am tiefsten?', a:'Im Dezember, am Winteranfang', w:['Im Juni', 'Im März'],
+     ex:'Im Dezember ist unsere Hälfte von der Sonne weg geneigt. Die Sonne steht mittags nur ungefähr 16° hoch.', show:{year:354}},
+    {q:'Wie ist es im Juni am Nordpol?', a:'Die Sonne geht gar nicht unter.', w:['Es ist den ganzen Tag dunkel.', 'Es ist genau wie bei uns.'],
+     ex:'Im Juni ist der Nordpol zur Sonne geneigt. Er bleibt bei jeder Drehung im Licht.', show:{year:171}},
+    {q:'Wann ist die Erde der Sonne am nächsten?', a:'Anfang Januar', w:['Im Juni', 'Im September'],
+     ex:'Anfang Januar! Bei uns ist trotzdem Winter. Die Entfernung macht also nicht die Jahreszeiten.', show:{year:2}}
+  ];
+  let R = null;
+  function newRound(){
+    R = {i:0, items:QS.map(q => ({q, opts:shuffle([{t:q.a, ok:true}, ...q.w.map(t => ({t}))]), firstOk:null, done:false, msg:'', cls:''}))};
+    render();
+  }
+  const N = () => R.items.length;
+  function render(){
+    const it = R.items[R.i];
+    let h = `<p class="task">${it.q.q}</p><div class="ops">${it.opts.map((o, i) => `<button type="button" class="op${o.state ? ' ' + o.state : ''}" data-i="${i}"${it.done || o.state === 'wrong' ? ' disabled' : ''}>${o.t}</button>`).join('')}</div>`;
+    h += `<p class="say ${it.cls}" aria-live="polite">${it.msg}</p>`;
+    h += `<div class="controls"><button class="btn ghost" type="button" id="qshow">Zeig's mir</button>${it.done ? `<button class="btn" type="button" id="qnext">${R.i + 1 < N() ? 'Nächste Frage' : 'Fertig'}</button>` : ''}</div>`;
+    $('#qbody').innerHTML = h;
+    document.querySelectorAll('#qbody .op').forEach(b => b.addEventListener('click', () => {
+      if (it.done) return;
+      const o = it.opts[+b.dataset.i];
+      if (it.firstOk === null) it.firstOk = !!o.ok;
+      if (o.ok){ o.state = 'right'; it.done = true; it.cls = 'ok'; it.msg = `Richtig! ${it.q.ex}`; render(); const nx = $('#qnext'); if (nx) nx.focus({preventScroll:true}); }
+      else { o.state = 'wrong'; it.cls = 'no'; it.msg = 'Noch nicht. Tipp auf „Zeig’s mir“ und schau es dir an.'; render(); }
+    }));
+    $('#qshow').addEventListener('click', () => show(it.q.show));
+    const nx = $('#qnext');
+    if (nx) nx.addEventListener('click', () => { R.i++; R.i < N() ? render() : finish(); });
+    $('#qpos').textContent = `Frage ${R.i + 1} von ${N()}`;
+    $('#qscore').textContent = `Sofort richtig: ${R.items.filter(x => x.firstOk).length}`;
+    $('#qbar').style.width = `${(R.i + (it.done ? 1 : 0)) / N() * 100}%`;
+  }
+  function show(s){
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (s.day != null){ stopDay(); D.t = s.day; drawDay(); $('#day-title').scrollIntoView({behavior:reduce ? 'auto' : 'smooth', block:'start'}); }
+    else { stopYear(); Y.d = s.year; drawYear(); $('#year-title').scrollIntoView({behavior:reduce ? 'auto' : 'smooth', block:'start'}); }
+  }
+  function finish(){
+    const ok = R.items.filter(x => x.firstOk).length;
+    $('#qbody').innerHTML = `<p class="done">Geschafft! ${ok} von ${N()} Fragen waren sofort richtig.</p><div class="controls"><button class="btn" id="again" type="button">Neue Runde</button></div>`;
+    $('#qpos').textContent = `${N()} von ${N()}`; $('#qbar').style.width = '100%';
+    $('#again').addEventListener('click', newRound);
+  }
+
+  drawDay(); drawYear(); newRound();
+})();
+</script>
+</body>
+</html>

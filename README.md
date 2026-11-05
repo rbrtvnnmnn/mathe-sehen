@@ -8,7 +8,7 @@ Angefangen hat es mit Mathe („Mathe sehen“). Weitere Fächer sollen nach und
 
 Abgehakt heißt: gibt es schon. In der empfohlenen Reihenfolge stehen alle fertigen Übungen auf der Übersichtsseite: https://rbrtvnnmnn.github.io/sehen-verstehen/
 
-Jede Übung endet mit Aufgaben zum Selberrechnen.
+Jede Übung endet mit Aufgaben oder Fragen zum Selbermachen.
 
 - [x] **Abstand:** Minus misst, wie weit zwei Zahlen auseinander liegen.
 - [x] **Zahlen sehen:** Teilen mit Rechenklötzen. 800 : 200 ist dasselbe Bild wie 8 : 2.
@@ -22,7 +22,8 @@ Jede Übung endet mit Aufgaben zum Selberrechnen.
 - [ ] **Verhältnisse:** Dreisatz, Rezepte, Maßstab, Geschwindigkeit, Dichte. Doppelt so viel von dem einen heißt doppelt so viel von dem anderen.
 - [ ] **Gleichgewicht:** Gleichungen als Waage, Hebel, Wippe.
 - [ ] **Größenordnungen:** das Sonnensystem maßstabsgetreu, die Erdgeschichte als Zeitstrahl, die Zelle unter dem Mikroskop.
-- [ ] **Kreisläufe:** Wasserkreislauf, Blutkreislauf, Nahrungskette, Tag und Nacht, Jahreszeiten, gern als Animation.
+- [x] **Tag, Nacht und Jahreszeiten:** Die Erde dreht sich und wandert mit schräger Achse um die Sonne, zum Selberdrehen.
+- [ ] **Kreisläufe:** Wasserkreislauf, Blutkreislauf, Nahrungskette, gern als Animation.
 - [ ] **Oberfläche und Volumen:** Warum haben Elefanten große Ohren und warum frieren kleine Tiere schneller?
 
 Die offenen Punkte sind für die Klassen 1 bis 7 gedacht: große Ideen, die in Mathe und in den Naturwissenschaften immer wieder vorkommen. Weitere Ideen gern als Issue.
