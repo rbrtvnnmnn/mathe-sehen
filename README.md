@@ -6,23 +6,25 @@ Angefangen hat es mit Mathe („Mathe sehen“). Weitere Fächer sollen nach und
 
 ## Die Übungen
 
-Alle Übungen in der empfohlenen Reihenfolge stehen auf der Übersichtsseite: https://rbrtvnnmnn.github.io/sehen-verstehen/
+Abgehakt heißt: gibt es schon. In der empfohlenen Reihenfolge stehen alle fertigen Übungen auf der Übersichtsseite: https://rbrtvnnmnn.github.io/sehen-verstehen/
 
 Jede Übung endet mit Aufgaben zum Selberrechnen.
 
-## Ideen für weitere Übungen
+- [x] **Abstand:** Minus misst, wie weit zwei Zahlen auseinander liegen.
+- [x] **Zahlen sehen:** Teilen mit Rechenklötzen. 800 : 200 ist dasselbe Bild wie 8 : 2.
+- [x] **Nullen-Paare:** Nullen streichen, aber nur im Paar.
+- [x] **Rechengeschichten:** Textaufgaben mit mal und geteilt.
+- [ ] **Gleiche Einheit:** erst alles in dieselbe Einheit umrechnen, dann rechnen (in Arbeit).
+- [ ] **Brüche:** Teil und Ganzes, als Streifen oder Pizza (in Arbeit).
+- [ ] **Bündeln in Zehnern:** Stellenwerte, Kommazahlen und Einheiten (m, cm, kg, g) folgen demselben Prinzip.
+- [ ] **Prozente und Kreisdiagramme:** Anteile vom Ganzen, als Fortsetzung der Brüche.
+- [ ] **Verhältnisse:** Dreisatz, Rezepte, Maßstab, Geschwindigkeit, Dichte. Doppelt so viel von dem einen heißt doppelt so viel von dem anderen.
+- [ ] **Gleichgewicht:** Gleichungen als Waage, Hebel, Wippe.
+- [ ] **Größenordnungen:** das Sonnensystem maßstabsgetreu, die Erdgeschichte als Zeitstrahl, die Zelle unter dem Mikroskop.
+- [ ] **Kreisläufe:** Wasserkreislauf, Blutkreislauf, Nahrungskette, Tag und Nacht, Jahreszeiten, gern als Animation.
+- [ ] **Oberfläche und Volumen:** Warum haben Elefanten große Ohren und warum frieren kleine Tiere schneller?
 
-Für die Klassen 1 bis 7, sortiert nach großen Ideen, die in Mathe und in den Naturwissenschaften immer wieder vorkommen:
-
-1. **Bündeln in Zehnern:** Stellenwerte, Kommazahlen und Einheiten (m, cm, kg, g) folgen demselben Prinzip.
-2. **Teil und Ganzes:** Brüche, Prozente, Anteile und Kreisdiagramme, als Streifen oder Pizza.
-3. **Verhältnisse:** Dreisatz, Rezepte, Maßstab, Geschwindigkeit, Dichte. Doppelt so viel von dem einen heißt doppelt so viel von dem anderen.
-4. **Gleichgewicht:** Gleichungen als Waage, Hebel, Wippe.
-5. **Größenordnungen:** das Sonnensystem maßstabsgetreu, die Erdgeschichte als Zeitstrahl, die Zelle unter dem Mikroskop.
-6. **Kreisläufe:** Wasserkreislauf, Blutkreislauf, Nahrungskette, Tag und Nacht, Jahreszeiten, gern als Animation.
-7. **Oberfläche und Volumen:** Warum haben Elefanten große Ohren und warum frieren kleine Tiere schneller?
-
-Weitere Ideen gern als Issue.
+Die offenen Punkte sind für die Klassen 1 bis 7 gedacht: große Ideen, die in Mathe und in den Naturwissenschaften immer wieder vorkommen. Weitere Ideen gern als Issue.
 
 ## Benutzen
 
