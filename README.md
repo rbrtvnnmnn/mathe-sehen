@@ -1,16 +1,18 @@
-# Mathe sehen
+# Sehen & Verstehen
 
-Interaktive Mathe-Übungen für alle, die Mathe verstehen statt auswendig lernen wollen. Die Idee: Rechenregeln sind leichter, wenn man sieht, warum sie stimmen. Erst sehen, dann rechnen.
+Interaktive Übungen für alle, die verstehen statt auswendig lernen wollen. Die Idee: Regeln sind leichter, wenn man sieht, warum sie stimmen. Erst sehen, dann verstehen.
+
+Angefangen hat es mit Mathe („Mathe sehen“). Weitere Fächer sollen nach und nach dazukommen.
 
 ## Die Übungen
 
-Alle Übungen in der empfohlenen Reihenfolge stehen auf der Übersichtsseite: https://rbrtvnnmnn.github.io/mathe-sehen/
+Alle Übungen in der empfohlenen Reihenfolge stehen auf der Übersichtsseite: https://rbrtvnnmnn.github.io/sehen-verstehen/
 
 Jede Übung endet mit Aufgaben zum Selberrechnen.
 
 ## Benutzen
 
-- **Online:** https://rbrtvnnmnn.github.io/mathe-sehen/
+- **Online:** https://rbrtvnnmnn.github.io/sehen-verstehen/
 - **Offline:** Repository als ZIP herunterladen, entpacken und `index.html` im Browser öffnen.
 
 Es gibt nichts zu installieren. Die Seiten funktionieren auf Computer, Tablet und Handy.
