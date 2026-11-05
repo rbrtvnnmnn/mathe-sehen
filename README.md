@@ -16,6 +16,7 @@ Jede Übung endet mit Aufgaben zum Selberrechnen.
 - [x] **Rechengeschichten:** Textaufgaben mit mal und geteilt.
 - [ ] **Gleiche Einheit:** erst alles in dieselbe Einheit umrechnen, dann rechnen (in Arbeit).
 - [x] **Brüche:** Teil und Ganzes, als Streifen oder Pizza.
+- [ ] **Negative Zahlen:** der Zahlenstrahl geht unter 0 weiter, mit Thermometer und Meeresspiegel. Abstand über die 0 hinweg.
 - [ ] **Bündeln in Zehnern:** Stellenwerte, Kommazahlen und Einheiten (m, cm, kg, g) folgen demselben Prinzip.
 - [ ] **Prozente und Kreisdiagramme:** Anteile vom Ganzen, als Fortsetzung der Brüche.
 - [ ] **Verhältnisse:** Dreisatz, Rezepte, Maßstab, Geschwindigkeit, Dichte. Doppelt so viel von dem einen heißt doppelt so viel von dem anderen.
