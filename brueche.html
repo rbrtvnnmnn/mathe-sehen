@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Brüche</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+/* Layout: same Karopapier world. Hero = tappable strip + pizza with Zähler/Nenner; then same amount with finer cuts (erweitern/kürzen); which is bigger; a fraction of an amount; a 10-task round. */
+:root{
+  --paper:#fbfcff; --grid:#e3e9f5; --ink:#1a2342; --ink-soft:#56607c;
+  --pen:#2447c9; --pen-ink:#ffffff; --card:#ffffff; --line:#cdd6ea;
+  --fill:#f5a043; --fill2:#2fa595; --zc:#c25400; --z2c:#16796d; --nc:#2447c9;
+  --ok:#1f8a4c; --no:#c2410c;
+  --display:"Bricolage Grotesque","Avenir Next","Trebuchet MS",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#17241e; --grid:#20322a; --ink:#eef4ef; --ink-soft:#a7b8ae;
+    --pen:#9db8ff; --pen-ink:#0f1830; --card:#1e2f27; --line:#33493e;
+    --fill:#f5b45a; --fill2:#3cc2b2; --zc:#ffb35c; --z2c:#5fd8c8; --nc:#9db8ff;
+    --ok:#5fd08d; --no:#ff9a62; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#17241e; --grid:#20322a; --ink:#eef4ef; --ink-soft:#a7b8ae;
+  --pen:#9db8ff; --pen-ink:#0f1830; --card:#1e2f27; --line:#33493e;
+  --fill:#f5b45a; --fill2:#3cc2b2; --zc:#ffb35c; --z2c:#5fd8c8; --nc:#9db8ff;
+  --ok:#5fd08d; --no:#ff9a62; color-scheme:dark;
+}
+body{
+  margin:0; background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:20px 20px;
+  color:var(--ink); font-family:var(--body); font-size:17px; line-height:1.5;
+}
+[hidden]{display:none!important}
+.wrap{
+  max-width:980px; margin:0 auto; display:grid; gap:44px;
+  padding-block:28px 72px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+h1,h2,h3{font-family:var(--display); text-wrap:balance; margin:0; line-height:1.08}
+h1{font-size:clamp(38px,7vw,58px); font-weight:800; letter-spacing:-.02em}
+h2{font-size:clamp(24px,4vw,32px); font-weight:750}
+h3{font-size:20px; font-weight:750}
+p{margin:0}
+a{color:var(--pen)}
+.lede{font-size:19px; color:var(--ink-soft); max-width:52ch; margin-top:10px}
+.eyebrow{font:700 13px/1 var(--body); letter-spacing:.09em; text-transform:uppercase; color:var(--pen)}
+.sec-head{display:grid; gap:10px; max-width:62ch}
+.card{
+  background:var(--card); border:1.5px solid var(--line); border-radius:22px;
+  box-shadow:5px 5px 0 var(--line); padding:clamp(18px,3.5vw,32px); min-width:0;
+  display:grid; gap:18px;
+}
+.hint-line{color:var(--ink-soft); font-size:15px}
+.zc{color:var(--zc)} .nc{color:var(--nc)} .z2c{color:var(--z2c)}
+
+/* stacked fraction */
+.fr{
+  display:inline-grid; vertical-align:middle; text-align:center; margin:0 .08em;
+  font:800 1em/1.08 var(--display); font-variant-numeric:tabular-nums;
+}
+.fr>span{padding:0 .14em}
+.fr>.n{border-top:.08em solid currentColor}
+.fr.col .z{color:var(--zc)} .fr.col .n{color:var(--nc); border-top-color:var(--ink)}
+.fr.big{font-size:clamp(58px,10vw,84px)}
+.fr.mid{font-size:clamp(34px,6vw,46px)}
+.fr input{
+  font:inherit; color:var(--pen); width:2.2ch; text-align:center; padding:0 4px; margin:2px 0 4px;
+  background:var(--paper); border:2.5px solid var(--line); border-radius:10px; outline:none;
+}
+.fr input:focus-visible{border-color:var(--pen)}
+
+/* pieces (strip, pie, stack) */
+.pcs{display:block; width:100%; height:auto; overflow:visible}
+.pcs .pc{fill:var(--paper); transition:fill .15s}
+.pcs .pc.on{fill:var(--fill)}
+.pcs .c2 .pc.on,.pcs .pc.on.c2{fill:var(--fill2)}
+.pcs .sep{stroke:var(--ink); stroke-width:2}
+.pcs .sub{stroke:var(--ink-soft); stroke-width:1.3; stroke-dasharray:3 3}
+.pcs .frame{fill:none; stroke:var(--ink); stroke-width:2.5}
+.pie .pc{stroke:var(--ink); stroke-width:2; stroke-linejoin:round}
+.pcs .tap{cursor:pointer}
+.pcs .tap:not(.on):hover{fill:color-mix(in srgb,var(--fill) 30%,var(--paper))}
+.pcs .tap:focus{outline:none}
+.pcs .tap:focus-visible{stroke:var(--pen); stroke-width:4}
+.pcs .ft{font-family:var(--display); font-weight:800; font-size:20px; text-anchor:middle; fill:var(--zc)}
+.pcs .ft.n{fill:var(--nc)}
+.pcs .c2 .ft{fill:var(--z2c)} .pcs .c2 .ft.n{fill:var(--nc)}
+.pcs .fl{stroke:var(--ink); stroke-width:2}
+.pcs .rowsel{fill:color-mix(in srgb,var(--pen) 9%,transparent); stroke:var(--pen); stroke-width:1.5}
+.pcs .row{cursor:pointer}
+.pcs .row:hover .rowbg{fill:color-mix(in srgb,var(--pen) 5%,transparent)}
+.pcs .rowbg{fill:transparent}
+.pcs .guide{stroke:var(--ink); stroke-width:2; stroke-dasharray:6 5}
+
+/* hero */
+.hero-row{display:grid; grid-template-columns:clamp(130px,30vw,210px) minmax(0,1fr); gap:clamp(16px,4vw,36px); align-items:center}
+.fx{display:flex; align-items:center; gap:18px; flex-wrap:wrap}
+.lbls{display:grid; gap:14px; font-size:17px; max-width:30ch}
+.lbls b{font-family:var(--display)}
+.ctl{display:flex; flex-wrap:wrap; gap:12px 24px; align-items:center}
+.stepper{display:flex; align-items:center; gap:8px; font:700 17px/1 var(--display)}
+.stepper button{
+  width:38px; height:38px; border-radius:10px; border:2px solid var(--line); background:var(--paper);
+  color:var(--ink); font:800 20px/1 var(--display); cursor:pointer;
+}
+.stepper button:hover{border-color:var(--pen)}
+.stepper .v{min-width:2ch; text-align:center; font-size:22px; font-variant-numeric:tabular-nums}
+.chips{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.chips .lbl{font-size:14px; color:var(--ink-soft)}
+.chip{
+  font:600 15px/1 var(--display); color:var(--ink); background:var(--paper);
+  border:1.5px solid var(--line); border-radius:999px; padding:6px 12px; cursor:pointer;
+}
+.chip .fr{font-size:15px}
+.chip:hover,.chip.sel{border-color:var(--pen); color:var(--pen)}
+.out{font-size:19px; max-width:60ch}
+.out b{font-family:var(--display)}
+
+/* same amount */
+.eqx{display:flex; align-items:stretch; gap:10px; font-size:clamp(34px,6vw,46px)}
+.eqx .arr{display:grid; grid-template-rows:1fr 1fr; align-items:center; font:750 .42em/1 var(--display); color:var(--pen); white-space:nowrap}
+.eqx .eq{align-self:center; font:800 1em/1 var(--display)}
+.eq-wrap{display:grid; grid-template-columns:auto minmax(0,1fr); gap:24px; align-items:center}
+.box{border:1.5px dashed var(--line); border-radius:14px; padding:14px 16px; font-size:17px; max-width:66ch}
+
+/* compare */
+.rules{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-top:14px}
+.rule{background:var(--card); border:1.5px solid var(--line); border-radius:16px; padding:18px; display:grid; gap:10px; align-content:start; min-width:0}
+.rule .kind{font:700 13px/1 var(--body); letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft)}
+.rule .verdict{font:800 22px/1.2 var(--display)}
+.rule p{font-size:16px}
+
+/* part of an amount */
+.groups{display:flex; flex-wrap:wrap; gap:12px; align-items:flex-start}
+.grp{
+  display:grid; gap:6px; justify-items:center; padding:10px; border-radius:14px;
+  border:2px dashed var(--line); transition:background .25s,border-color .25s;
+}
+.grp .dots{display:grid; grid-template-columns:repeat(var(--cols,5),18px); gap:6px}
+.grp i{width:18px; height:18px; border-radius:50%; background:var(--ink-soft); opacity:.55; transition:background .25s,opacity .25s; animation:pop .3s both}
+.grp.on{border-style:solid; border-color:var(--fill); background:color-mix(in srgb,var(--fill) 16%,transparent)}
+.grp.on i{background:var(--fill); opacity:1}
+.grp .gl{font-size:15px; color:var(--ink-soft)}
+@keyframes pop{from{transform:scale(.4); opacity:0}}
+.steps-out{display:grid; gap:6px; font-size:19px}
+.calc-line{font:750 clamp(22px,3.6vw,30px)/1.25 var(--display); font-variant-numeric:tabular-nums}
+
+/* trainer */
+.qtop{display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; font:700 15px/1 var(--display); color:var(--ink-soft)}
+.bar-p{height:8px; border-radius:99px; background:var(--line); overflow:hidden; margin-top:8px}
+.bar-p i{display:block; height:100%; width:0; background:var(--pen); border-radius:99px; transition:width .3s}
+.task{font-size:clamp(21px,3vw,26px); line-height:1.6; max-width:42ch; font-weight:700}
+.qpic{max-width:560px}
+.qpic.pie{max-width:190px}
+.ops{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; max-width:560px}
+.op{
+  font:750 clamp(20px,3vw,26px)/1.2 var(--display); font-variant-numeric:tabular-nums;
+  padding:12px; border-radius:14px; border:2px solid var(--line); background:var(--paper); color:var(--ink); cursor:pointer;
+}
+.op .fr{font-size:1.15em}
+.op:hover{border-color:var(--pen)}
+.op.right{border-color:var(--ok); background:color-mix(in srgb,var(--ok) 14%,var(--card)); color:var(--ok)}
+.op.wrong{border-color:var(--no); color:var(--no); opacity:.7}
+.op:disabled{cursor:default}
+.say{font-size:19px; min-height:1.6em; max-width:62ch}
+.say.ok{color:var(--ok)} .say.no{color:var(--no)}
+.say .fr{font-size:.9em}
+.calc{display:flex; flex-wrap:wrap; align-items:center; gap:.3em; font:750 clamp(26px,5vw,40px)/1.2 var(--display); font-variant-numeric:tabular-nums}
+.calc>input{
+  font:inherit; color:var(--pen); width:3.2ch; text-align:center; padding:0 6px;
+  background:var(--paper); border:2.5px solid var(--line); border-radius:12px; outline:none;
+}
+.calc>input:focus-visible{border-color:var(--pen)}
+.calc .unit{color:var(--ink-soft); font-size:.7em}
+.done{font:750 clamp(26px,5vw,38px)/1.15 var(--display)}
+.stage{display:grid; gap:14px}
+.controls{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+.btn{
+  font:700 19px/1 var(--display); border-radius:14px; padding:14px 22px; cursor:pointer;
+  border:2px solid var(--pen); background:var(--pen); color:var(--pen-ink);
+}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent; color:var(--pen)}
+.btn:focus-visible,.chip:focus-visible,.op:focus-visible,.stepper button:focus-visible{outline:3px solid var(--pen); outline-offset:2px}
+
+footer{color:var(--ink-soft); font-size:15px; display:flex; flex-wrap:wrap; gap:6px 18px}
+
+@media (max-width:760px){
+  .rules{grid-template-columns:minmax(0,1fr)}
+  .eq-wrap{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:640px){
+  .ops{grid-template-columns:minmax(0,1fr)}
+  .btn{font-size:17px; padding:12px 18px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important; animation:none!important}
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <div class="eyebrow">Teil und Ganzes</div>
+    <h1>Brüche</h1>
+    <p class="lede">Ein Bruch sagt: Das Ganze ist in gleiche Teile geteilt, und so viele davon nehmen wir. Mehr steckt nicht dahinter.</p>
+  </header>
+
+  <section class="card" aria-labelledby="hero-title">
+    <h2 id="hero-title">Ein Ganzes, in gleiche Teile geteilt</h2>
+    <p class="hint-line">Tipp auf die Teile im Streifen oder in der Pizza, um sie zu färben. Mit den Knöpfen änderst du die Zahl der Teile.</p>
+    <div id="h-bar"></div>
+    <div class="hero-row">
+      <div id="h-pie"></div>
+      <div class="fx">
+        <div id="h-frac"></div>
+        <div class="lbls">
+          <p><b class="zc">Zähler</b> (oben): zählt, wie viele Teile gefärbt sind.</p>
+          <p><b class="nc">Nenner</b> (unten): nennt, in wie viele gleiche Teile das Ganze geteilt ist. Er gibt dem Bruch den Namen: Viertel, Fünftel, Achtel.</p>
+        </div>
+      </div>
+    </div>
+    <div class="ctl">
+      <div class="stepper"><span class="nc">Teile</span><button type="button" data-h="n" data-d="-1" aria-label="ein Teil weniger">−</button><span class="v" id="h-n"></span><button type="button" data-h="n" data-d="1" aria-label="ein Teil mehr">+</button></div>
+      <div class="stepper"><span class="zc">Gefärbt</span><button type="button" data-h="a" data-d="-1" aria-label="ein gefärbtes Teil weniger">−</button><span class="v" id="h-a"></span><button type="button" data-h="a" data-d="1" aria-label="ein gefärbtes Teil mehr">+</button></div>
+    </div>
+    <p class="out" id="h-out" aria-live="polite"></p>
+    <div class="chips" id="h-chips"><span class="lbl">Probier:</span></div>
+  </section>
+
+  <section class="card" aria-labelledby="eq-title">
+    <div class="sec-head">
+      <div class="eyebrow">Gleich viel, anderer Name</div>
+      <h2 id="eq-title">Feiner schneiden</h2>
+      <p>Schneide jedes Stück noch einmal durch. Die Farbe reicht genau gleich weit, nur der Name ändert sich. Tipp auf eine Zeile.</p>
+    </div>
+    <div class="chips" id="e-chips"><span class="lbl">Bruch:</span></div>
+    <div id="e-stack"></div>
+    <div class="eq-wrap">
+      <div id="e-eq"></div>
+      <p class="out" id="e-out" aria-live="polite"></p>
+    </div>
+    <p class="box" id="e-back"></p>
+  </section>
+
+  <section aria-labelledby="cmp-title">
+    <div class="sec-head">
+      <div class="eyebrow">Merke</div>
+      <h2 id="cmp-title">Welcher Bruch ist größer?</h2>
+      <p>Leg die Streifen untereinander. Wo die Farbe weiter reicht, ist mehr.</p>
+    </div>
+    <div class="rules" id="cmp-rules"></div>
+  </section>
+
+  <section class="card" aria-labelledby="part-title">
+    <div class="sec-head">
+      <div class="eyebrow">Bruchteil von einer Menge</div>
+      <h2 id="part-title">Erst teilen, dann nehmen</h2>
+      <p>Wie viel sind drei Viertel von 20 Kindern? Teile das Ganze in gleiche Gruppen. Dann nimm so viele Gruppen, wie oben im Bruch steht.</p>
+    </div>
+    <div class="chips" id="p-chips"><span class="lbl">Beispiel:</span></div>
+    <div class="steps-out" id="p-out" aria-live="polite"></div>
+    <div id="p-dots"></div>
+    <div class="controls"><button class="btn" type="button" id="p-next"></button></div>
+  </section>
+
+  <section class="card" aria-labelledby="q-title">
+    <div class="eyebrow">Jetzt du</div>
+    <h2 id="q-title">10 Bruch-Aufgaben</h2>
+    <div>
+      <div class="qtop"><span id="qpos"></span><span id="qscore"></span></div>
+      <div class="bar-p"><i id="qbar"></i></div>
+    </div>
+    <div id="qbody" class="stage"></div>
+  </section>
+
+  <footer>
+    <a href="index.html">← Alle Übungen</a>
+    <span>Auch hier:</span>
+    <a href="nullen-paare.html">Nullen-Paare</a>
+    <a href="rechengeschichten.html">Rechengeschichten</a>
+  </footer>
+</main>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const rint = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const shuffle = arr => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const gcd = (a, b) => b ? gcd(b, a % b) : a;
+  const lcm = (a, b) => a / gcd(a, b) * b;
+  const wOf = el => Math.max(260, Math.round((el && el.clientWidth) || 600));
+
+  const NAMES = {2:'Halbe', 3:'Drittel', 4:'Viertel', 5:'Fünftel', 6:'Sechstel', 7:'Siebtel', 8:'Achtel', 9:'Neuntel', 10:'Zehntel', 11:'Elftel', 12:'Zwölftel'};
+  const WORDS = ['null', 'ein', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'sieben', 'acht', 'neun', 'zehn', 'elf', 'zwölf'];
+  const fname = (a, b) => b === 2 && a === 1 ? 'ein Halb' : `${WORDS[a]} ${NAMES[b]}`;
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+  const F = (a, b, cls = '') => `<span class="fr${cls ? ' ' + cls : ''}"><span class="z">${a}</span><span class="n">${b}</span></span>`;
+  const toOn = (n, on) => Array.isArray(on) ? on : Array.from({length:n}, (_, i) => i < on);
+
+  // ---------- drawing ----------
+  let uid = 0;
+  // strip at (x, y), n small pieces, thick line every g pieces
+  function barG({n, on, g = 1, x = 2, y = 2, w, h, tap = false, cls = ''}){
+    const o = toOn(n, on), pw = w / n, id = `cp${++uid}`;
+    let s = `<g class="${cls}"><clipPath id="${id}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8"/></clipPath><g clip-path="url(#${id})">`;
+    for (let i = 0; i < n; i++){
+      s += `<rect class="pc${o[i] ? ' on' : ''}${tap ? ' tap' : ''}" x="${x + i * pw}" y="${y}" width="${pw + .5}" height="${h}"` +
+           (tap ? ` data-i="${i}" tabindex="0" role="checkbox" aria-checked="${!!o[i]}" aria-label="Teil ${i + 1}"` : '') + `/>`;
+    }
+    for (let i = 1; i < n; i++) s += `<line class="${i % g === 0 ? 'sep' : 'sub'}" x1="${x + i * pw}" y1="${y}" x2="${x + i * pw}" y2="${y + h}"/>`;
+    return s + `</g><rect class="frame" x="${x}" y="${y}" width="${w}" height="${h}" rx="8"/></g>`;
+  }
+  function barSVG(o){
+    const W = o.W, h = o.h || 64;
+    return `<svg class="pcs" viewBox="0 0 ${W} ${h + 4}" width="${W}" height="${h + 4}">${barG({...o, x:2, y:2, w:W - 4, h})}</svg>`;
+  }
+  function pieSVG({n, on, tap = false}){
+    const o = toOn(n, on), S = 200, c = S / 2, r = S / 2 - 3;
+    let s = '';
+    if (n === 1){
+      s = `<circle class="pc${o[0] ? ' on' : ''}${tap ? ' tap' : ''}" cx="${c}" cy="${c}" r="${r}"${tap ? ' data-i="0" tabindex="0" role="checkbox" aria-label="Teil 1"' : ''}/>`;
+    } else {
+      for (let i = 0; i < n; i++){
+        const a0 = i / n * 2 * Math.PI - Math.PI / 2, a1 = (i + 1) / n * 2 * Math.PI - Math.PI / 2;
+        const p = a => `${(c + r * Math.cos(a)).toFixed(2)} ${(c + r * Math.sin(a)).toFixed(2)}`;
+        s += `<path class="pc${o[i] ? ' on' : ''}${tap ? ' tap' : ''}" d="M${c} ${c}L${p(a0)}A${r} ${r} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${p(a1)}Z"` +
+             (tap ? ` data-i="${i}" tabindex="0" role="checkbox" aria-checked="${!!o[i]}" aria-label="Teil ${i + 1}"` : '') + `/>`;
+      }
+    }
+    s += `<circle class="frame" cx="${c}" cy="${c}" r="${r}"/>`;
+    return `<svg class="pcs pie" viewBox="0 0 ${S} ${S}" width="${S}" height="${S}">${s}</svg>`;
+  }
+  // rows of strips with a fraction label on the left. row: {a, n, g, label:[z, n], cls}
+  function stackSVG(rows, W, opt = {}){
+    const labW = 64, bh = opt.bh || 42, rowH = bh + 26, x0 = labW, bw = W - labW - 4, H = rows.length * rowH;
+    let s = '';
+    rows.forEach((r, i) => {
+      const y = i * rowH + 13, lab = r.label || [r.a, r.n], cy = y + bh / 2;
+      let g = '';
+      if (opt.tapRows) g += `<rect class="${opt.sel === i ? 'rowsel' : 'rowbg'}" x="0" y="${y - 10}" width="${W}" height="${bh + 20}" rx="12"/>`;
+      g += `<text class="ft" x="${labW / 2 - 4}" y="${cy - 5}">${lab[0]}</text><line class="fl" x1="${labW / 2 - 22}" y1="${cy + 1}" x2="${labW / 2 + 14}" y2="${cy + 1}"/>` +
+           `<text class="ft n" x="${labW / 2 - 4}" y="${cy + 22}">${lab[1]}</text>`;
+      g += barG({n:r.n, on:r.a, g:r.g || 1, x:x0, y, w:bw, h:bh});
+      s += `<g class="${opt.tapRows ? 'row ' : ''}${r.cls || ''}"${opt.tapRows ? ` data-k="${i}" tabindex="0" role="button" aria-label="Zeile ${i + 1}: ${lab[0]} von ${lab[1]}"` : ''}>${g}</g>`;
+    });
+    (opt.guides || []).forEach(f => { s += `<line class="guide" x1="${x0 + f * bw}" y1="2" x2="${x0 + f * bw}" y2="${H - 2}"/>`; });
+    return `<svg class="pcs" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${s}</svg>`;
+  }
+  // tap/keyboard on pieces inside el; cb(i)
+  function tappable(el, cb){
+    el.addEventListener('click', e => { const t = e.target.closest('[data-i]'); if (t) cb(+t.getAttribute('data-i')); });
+    el.addEventListener('keydown', e => {
+      const t = e.target.closest('[data-i]');
+      if (t && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); cb(+t.getAttribute('data-i')); }
+    });
+  }
+  const refocus = (el, i) => { const t = el.querySelector(`[data-i="${i}"]`); if (t && t.focus) t.focus({preventScroll:true}); };
+
+  // ---------- hero ----------
+  const H = {n:4, on:[true, true, true, false]};
+  function heroDraw(){
+    const n = H.n, a = H.on.filter(Boolean).length;
+    $('#h-n').textContent = n; $('#h-a').textContent = a;
+    $('#h-bar').innerHTML = barSVG({n, on:H.on, W:wOf($('#h-bar')), h:70, tap:true});
+    $('#h-pie').innerHTML = pieSVG({n, on:H.on, tap:true});
+    $('#h-frac').innerHTML = F(a, n, 'big col');
+    let t;
+    if (a === 0) t = `Noch nichts gefärbt: ${F(0, n)} ist null. Tipp auf ein Teil.`;
+    else if (a === n) t = `Alle ${n} Teile sind gefärbt. ${F(n, n)} ist <b>ein Ganzes</b>, also 1.`;
+    else t = `Das Ganze ist in <b class="nc">${n} gleiche Teile</b> geteilt. <b class="zc">${a}</b> davon ${a === 1 ? 'ist' : 'sind'} gefärbt. Das ${a === 1 ? 'ist' : 'sind'} <b>${fname(a, n)}</b>.`;
+    $('#h-out').innerHTML = t;
+    document.querySelectorAll('#h-chips .chip').forEach(c => c.classList.toggle('sel', +c.dataset.a === a && +c.dataset.b === n && H.on.slice(0, a).every(Boolean)));
+  }
+  function heroSet(n, a){ H.n = n; H.on = Array.from({length:n}, (_, i) => i < a); heroDraw(); }
+  function heroTap(i){ H.on[i] = !H.on[i]; heroDraw(); }
+  tappable($('#h-bar'), i => { heroTap(i); refocus($('#h-bar'), i); });
+  tappable($('#h-pie'), i => { heroTap(i); refocus($('#h-pie'), i); });
+  document.querySelectorAll('[data-h]').forEach(b => b.addEventListener('click', () => {
+    const d = +b.dataset.d, a = H.on.filter(Boolean).length;
+    if (b.dataset.h === 'n'){ const n = clamp(H.n + d, 2, 12); heroSet(n, Math.min(a, n)); }
+    else heroSet(H.n, clamp(a + d, 0, H.n));
+  }));
+  [[1, 2], [1, 3], [3, 4], [2, 5], [5, 8], [4, 4]].forEach(([a, b]) => {
+    const c = document.createElement('button');
+    c.type = 'button'; c.className = 'chip'; c.dataset.a = a; c.dataset.b = b; c.innerHTML = F(a, b);
+    c.setAttribute('aria-label', fname(a, b));
+    c.addEventListener('click', () => heroSet(b, a));
+    $('#h-chips').appendChild(c);
+  });
+
+  // ---------- same amount, finer cuts ----------
+  const E = {a:3, b:4, k:2};
+  function eqDraw(){
+    const {a, b, k} = E, el = $('#e-stack');
+    const rows = [1, 2, 3, 4].map(m => ({a:a * m, n:b * m, g:m}));
+    el.innerHTML = stackSVG(rows, wOf(el), {sel:k - 1, tapRows:true, guides:[a / b]});
+    if (k === 1){
+      $('#e-eq').innerHTML = F(a, b, 'mid col');
+      $('#e-out').innerHTML = `Das ist ${F(a, b)}. Tipp auf eine andere Zeile: Dort ist jedes Stück noch einmal geschnitten.`;
+      $('#e-back').hidden = true;
+    } else {
+      $('#e-eq').innerHTML = `<div class="eqx">${F(a, b, 'col')}<span class="arr"><span>· ${k} →</span><span>· ${k} →</span></span>${F(a * k, b * k, 'col')}</div>`;
+      $('#e-out').innerHTML = `Jedes Stück ist in ${k} kleinere Stücke geschnitten. Darum gibt es ${k}-mal so viele Stücke <span class="nc">(Nenner · ${k})</span> und ${k}-mal so viele gefärbte <span class="zc">(Zähler · ${k})</span>. Die Farbe reicht genau gleich weit: ${F(a, b)} = ${F(a * k, b * k)}. Das heißt <b>Erweitern</b>.`;
+      $('#e-back').hidden = false;
+      $('#e-back').innerHTML = `Rückwärts heißt das <b>Kürzen</b>: ${F(a * k, b * k)} → ${F(a, b)}. Leg immer ${k} kleine Stücke zusammen, also oben und unten geteilt durch ${k}. Das kennst du von den <a href="nullen-paare.html">Nullen-Paaren</a>: Was du oben machst, machst du auch unten.`;
+    }
+    document.querySelectorAll('#e-chips .chip').forEach(c => c.classList.toggle('sel', +c.dataset.a === a && +c.dataset.b === b));
+  }
+  const eStack = $('#e-stack');
+  const eRow = e => { const t = e.target.closest('[data-k]'); if (!t) return null; return +t.getAttribute('data-k'); };
+  eStack.addEventListener('click', e => { const k = eRow(e); if (k != null){ E.k = k + 1; eqDraw(); } });
+  eStack.addEventListener('keydown', e => {
+    const k = eRow(e);
+    if (k != null && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); E.k = k + 1; eqDraw(); const t = eStack.querySelector(`[data-k="${k}"]`); if (t && t.focus) t.focus({preventScroll:true}); }
+  });
+  [[1, 2], [1, 3], [2, 3], [3, 4], [2, 5]].forEach(([a, b]) => {
+    const c = document.createElement('button');
+    c.type = 'button'; c.className = 'chip'; c.dataset.a = a; c.dataset.b = b; c.innerHTML = F(a, b);
+    c.setAttribute('aria-label', fname(a, b));
+    c.addEventListener('click', () => { E.a = a; E.b = b; eqDraw(); });
+    $('#e-chips').appendChild(c);
+  });
+
+  // ---------- compare ----------
+  const CMP = [
+    {kind:'Gleicher Nenner', rows:[{a:3, n:8}, {a:5, n:8, cls:'c2'}], verdict:`${F(5, 8)} ist größer`,
+     text:'Die Stücke sind gleich groß. Wer mehr Stücke hat, hat mehr. Du musst nur die Zähler vergleichen.'},
+    {kind:'Gleicher Zähler', rows:[{a:1, n:3}, {a:1, n:5, cls:'c2'}], verdict:`${F(1, 3)} ist größer`,
+     text:'Obwohl 5 größer ist als 3! Je mehr Teile, desto kleiner ist jedes Stück. Ein Drittel einer Pizza ist mehr als ein Fünftel.'},
+    {kind:'Alles verschieden', rows:[{a:8, n:12, g:4, label:[2, 3]}, {a:9, n:12, g:3, label:[3, 4], cls:'c2'}], verdict:`${F(3, 4)} ist größer`,
+     text:`Schneide beide in gleich große Stücke, hier in Zwölftel: ${F(2, 3)} = ${F(8, 12)} und ${F(3, 4)} = ${F(9, 12)}. Jetzt ist es wie beim gleichen Nenner.`}
+  ];
+  $('#cmp-rules').innerHTML = CMP.map((c, i) => `<div class="rule"><div class="kind">${c.kind}</div><div class="cmp-pic" data-c="${i}"></div><div class="verdict">${c.verdict}</div><p>${c.text}</p></div>`).join('');
+  function cmpDraw(){
+    document.querySelectorAll('.cmp-pic').forEach(el => { el.innerHTML = stackSVG(CMP[+el.dataset.c].rows, wOf(el), {bh:34}); });
+  }
+
+  // ---------- part of an amount ----------
+  const PX = [
+    {a:3, b:4, N:20, u:'Kinder', d:'Kindern'},
+    {a:2, b:3, N:12, u:'€', d:'€'},
+    {a:2, b:5, N:30, u:'Bonbons', d:'Bonbons'},
+    {a:5, b:6, N:24, u:'Stifte', d:'Stiften'}
+  ];
+  const P = {ex:PX[0], step:0};
+  function dotsHTML(N, b, a, step){
+    if (step === 0) return `<div class="groups"><div class="grp" style="--cols:${Math.min(10, N)}"><div class="dots">${'<i></i>'.repeat(N)}</div></div></div>`;
+    const per = N / b, cols = per <= 5 ? per : Math.ceil(per / 2);
+    let s = '';
+    for (let g = 0; g < b; g++) s += `<div class="grp${step >= 2 && g < a ? ' on' : ''}" style="--cols:${cols}"><div class="dots">${'<i></i>'.repeat(per)}</div><span class="gl">${F(1, b)}</span></div>`;
+    return `<div class="groups">${s}</div>`;
+  }
+  function partDraw(){
+    const {a, b, N, u, d} = P.ex, per = N / b, ans = per * a;
+    $('#p-dots').innerHTML = dotsHTML(N, b, a, P.step);
+    let t = `<p>Hier sind <b>${N} ${u}</b>. Das ist das Ganze. Wie viel sind ${F(a, b)} davon?</p>`;
+    if (P.step >= 1) t += `<p class="calc-line">${N} : ${b} = ${per}</p><p>${cap(fname(1, b))} sind ${per} ${u}. Das ist <b>ein Stück</b>.</p>`;
+    if (P.step >= 2) t += `<p class="calc-line">${per} · ${a} = ${ans}</p><p>${cap(fname(a, b))} von ${N} ${d} sind <b>${ans} ${u}</b>. Erst teilen (Ganzes : Nenner), dann malnehmen (ein Stück · Zähler). Wie bei den <a href="rechengeschichten.html">Rechengeschichten</a>.</p>`;
+    $('#p-out').innerHTML = t;
+    $('#p-next').textContent = P.step === 0 ? `In ${b} gleiche Gruppen teilen` : P.step === 1 ? `${a} ${a === 1 ? 'Gruppe' : 'Gruppen'} nehmen` : 'Nochmal';
+    document.querySelectorAll('#p-chips .chip').forEach((c, i) => c.classList.toggle('sel', PX[i] === P.ex));
+  }
+  $('#p-next').addEventListener('click', () => { P.step = (P.step + 1) % 3; partDraw(); });
+  PX.forEach(ex => {
+    const c = document.createElement('button');
+    c.type = 'button'; c.className = 'chip'; c.innerHTML = `${F(ex.a, ex.b)} von ${ex.N} ${ex.d}`;
+    c.addEventListener('click', () => { P.ex = ex; P.step = 0; partDraw(); });
+    $('#p-chips').appendChild(c);
+  });
+
+  // ---------- trainer ----------
+  const ROUND = 10;
+  const PART_CTX = [
+    {u:'Kinder', text:(N, f) => `In einer Klasse sind ${N} Kinder. ${f} davon fahren mit dem Bus. Wie viele Kinder fahren mit dem Bus?`},
+    {u:'€', text:(N, f) => `Tom hat ${N} €. Er gibt ${f} davon für ein Buch aus. Wie viel kostet das Buch?`},
+    {u:'Bonbons', text:(N, f) => `In einer Tüte sind ${N} Bonbons. Mia isst ${f} davon. Wie viele Bonbons isst sie?`},
+    {u:'Seiten', text:(N, f) => `Ein Buch hat ${N} Seiten. Ben hat schon ${f} davon gelesen. Wie viele Seiten sind das?`},
+    {u:'Äpfel', text:(N, f) => `In einer Kiste liegen ${N} Äpfel. ${f} davon sind rot. Wie viele Äpfel sind rot?`}
+  ];
+  const GEN = {
+    read(){ const n = rint(3, 8); let a; do { a = rint(1, n - 1); } while (a * 2 === n);
+      return {type:'read', n, a, pic:pick(['bar', 'pie']), opts:shuffle([{a, b:n, ok:true}, {a:n - a, b:n, why:'white'}, {a, b:n - a, why:'rest'}])}; },
+    color(){ const n = rint(3, 8), a = rint(1, n - 1); return {type:'color', n, a, pic:pick(['bar', 'pie']), on:Array(n).fill(false)}; },
+    erw(){ const b = rint(2, 5), a = rint(1, b - 1), k = rint(2, b === 5 ? 3 : 4); return {type:'erw', a, b, k}; },
+    kurz(){ let b, a; do { b = rint(2, 5); a = rint(1, b - 1); } while (gcd(a, b) !== 1); const k = rint(2, b === 5 ? 3 : 4); return {type:'kurz', a, b, k}; },
+    cmp(kind){
+      let L, R;
+      if (kind === 'n'){ const n = rint(4, 10); let a1 = rint(1, n - 1), a2; do { a2 = rint(1, n - 1); } while (a2 === a1); L = [a1, n]; R = [a2, n]; }
+      else if (kind === 'z'){ const a = pick([1, 1, 2]); let b1 = rint(a + 1, 8), b2; do { b2 = rint(a + 1, 8); } while (b2 === b1); L = [a, b1]; R = [a, b2]; }
+      else if (kind === 'eq'){ [L, R] = shuffle(pick([[[1, 2], [3, 6]], [[2, 3], [4, 6]], [[3, 4], [6, 8]], [[1, 2], [4, 8]], [[2, 5], [4, 10]]])); }
+      else { [L, R] = shuffle(pick([[[1, 2], [2, 5]], [[2, 3], [3, 4]], [[3, 4], [5, 8]], [[3, 5], [1, 2]], [[5, 6], [3, 4]], [[2, 3], [5, 6]], [[1, 2], [3, 8]]])); }
+      const d = L[0] * R[1] - R[0] * L[1];
+      return {type:'cmp', kind, L, R, best:d > 0 ? 0 : d < 0 ? 1 : 2, states:[]};
+    },
+    part(){ const b = rint(2, 6), per = rint(2, Math.min(8, Math.floor(40 / b))), c = pick(PART_CTX); let a; do { a = b === 2 ? 1 : rint(2, b - 1); } while (gcd(a, b) !== 1 && b > 3);
+      return {type:'part', a, b, N:b * per, per, ctx:c}; }
+  };
+  let R = null;
+  function newRound(){
+    const mk = [GEN.read(), GEN.color(), Math.random() < .5 ? GEN.read() : GEN.color(), GEN.erw(), GEN.kurz(),
+                GEN.cmp('n'), GEN.cmp('z'), GEN.cmp(Math.random() < .35 ? 'eq' : 'mix'), GEN.part(), GEN.part()];
+    R = {tasks:mk.map(t => ({...t, firstOk:null, done:false, msg:'', cls:'', showPic:false})), i:0};
+    render();
+  }
+  const cur = () => R.tasks[R.i];
+  const first = (t, ok) => { if (t.firstOk === null) t.firstOk = ok; };
+
+  function picHTML(t){
+    if (t.type === 'read' || t.type === 'color') return `<div class="qpic${t.pic === 'pie' ? ' pie' : ''}" id="qpic"></div>`;
+    if (t.type === 'part') return t.showPic || t.done ? `<div id="qpic">${dotsHTML(t.N, t.b, t.a, t.done ? 2 : 1)}</div>` : '';
+    return `<div class="qpic" id="qpic"></div>`;
+  }
+  function drawPic(t, W){
+    const el = $('#qpic'); if (!el) return;
+    W = Math.min(560, W);
+    if (t.type === 'read') el.innerHTML = t.pic === 'pie' ? pieSVG({n:t.n, on:t.a}) : barSVG({n:t.n, on:t.a, W, h:64});
+    else if (t.type === 'color') el.innerHTML = t.pic === 'pie' ? pieSVG({n:t.n, on:t.on, tap:!t.done}) : barSVG({n:t.n, on:t.on, W, h:64, tap:!t.done});
+    else if (t.type === 'erw'){
+      const {a, b, k} = t, rows = [{a, n:b}];
+      if (t.showPic || t.done) rows.push({a:a * k, n:b * k, g:k, label:[t.done ? a * k : '?', b * k], cls:'c2'});
+      el.innerHTML = stackSVG(rows, W, {guides:t.showPic || t.done ? [a / b] : []});
+    } else if (t.type === 'kurz'){
+      const {a, b, k} = t, rows = [{a:a * k, n:b * k}];
+      if (t.showPic || t.done) rows.push({a:a * k, n:b * k, g:k, label:[t.done ? a : '?', b], cls:'c2'});
+      el.innerHTML = stackSVG(rows, W, {guides:t.showPic || t.done ? [a / b] : []});
+    } else if (t.type === 'cmp'){
+      if (!(t.showPic || t.done)){ el.innerHTML = ''; return; }
+      const [L, Rr] = [t.L, t.R], d = lcm(L[1], Rr[1]), same = L[1] === Rr[1];
+      const row = (f, cls) => same || t.kind === 'z' ? {a:f[0], n:f[1], cls} : {a:f[0] * d / f[1], n:d, g:d / f[1], label:f, cls};
+      el.innerHTML = stackSVG([row(L, ''), row(Rr, 'c2')], W, {bh:36});
+    }
+  }
+
+  function render(){
+    const t = cur(), W = wOf($('#qbody'));
+    let h = '';
+    if (t.type === 'read'){
+      h += `<p class="task">Welcher Bruch ist gefärbt?</p>${picHTML(t)}`;
+      h += `<div class="ops">${t.opts.map((o, i) => `<button type="button" class="op${o.state ? ' ' + o.state : ''}" data-o="${i}"${t.done ? ' disabled' : ''} aria-label="${o.a} von ${o.b}">${F(o.a, o.b)}</button>`).join('')}</div>`;
+    } else if (t.type === 'color'){
+      h += `<p class="task">Färbe ${F(t.a, t.n)} ${t.pic === 'pie' ? 'von der Pizza' : 'vom Streifen'}. Tipp auf die Teile.</p>${picHTML(t)}`;
+      if (!t.done) h += `<div class="controls"><button class="btn" id="qcheck" type="button">Prüfen</button></div>`;
+    } else if (t.type === 'erw' || t.type === 'kurz'){
+      const {a, b, k} = t, erw = t.type === 'erw';
+      const left = erw ? F(a, b, 'mid') : F(a * k, b * k, 'mid'), rd = erw ? b * k : b, ans = erw ? a * k : a;
+      h += `<p class="task">${erw ? 'Gleich viel, feiner geschnitten.' : 'Kürze: gleich viel, gröber geschnitten.'} Welche Zahl fehlt?</p>`;
+      h += `<div class="calc">${left}<span>=</span><span class="fr mid"><span class="z"><input id="qin" inputmode="numeric" autocomplete="off" aria-label="fehlender Zähler"${t.done ? ` disabled value="${ans}"` : ''}></span><span class="n">${rd}</span></span></div>`;
+      h += picHTML(t);
+      if (!t.done) h += `<div class="controls"><button class="btn" id="qcheck" type="button">Prüfen</button><button class="btn ghost" id="qhint" type="button">Zeig's mir</button></div>`;
+    } else if (t.type === 'cmp'){
+      h += `<p class="task">Welcher Bruch ist größer?</p>`;
+      h += `<div class="ops">${[t.L, t.R].map((f, i) => `<button type="button" class="op${t.states[i] ? ' ' + t.states[i] : ''}" data-o="${i}"${t.done ? ' disabled' : ''} aria-label="${f[0]} von ${f[1]}">${F(f[0], f[1])}</button>`).join('')}` +
+           `<button type="button" class="op${t.states[2] ? ' ' + t.states[2] : ''}" data-o="2"${t.done ? ' disabled' : ''}>gleich groß</button></div>`;
+      h += picHTML(t);
+    } else if (t.type === 'part'){
+      h += `<p class="task">${t.ctx.text(t.N, F(t.a, t.b))}</p>`;
+      h += `<div class="calc"><input id="qin" inputmode="numeric" autocomplete="off" aria-label="Ergebnis"${t.done ? ` disabled value="${t.per * t.a}"` : ''}><span class="unit">${t.ctx.u}</span></div>`;
+      h += picHTML(t);
+      if (!t.done) h += `<div class="controls"><button class="btn" id="qcheck" type="button">Prüfen</button><button class="btn ghost" id="qhint" type="button">Zeig's mir</button></div>`;
+    }
+    h += `<p class="say ${t.cls}" id="qsay" aria-live="polite">${t.msg}</p>`;
+    if (t.done) h += `<div class="controls"><button class="btn" id="qnext" type="button">${R.i + 1 < ROUND ? 'Nächste Aufgabe' : 'Fertig'}</button></div>`;
+    $('#qbody').innerHTML = h;
+    drawPic(t, W);
+    wire(t);
+    top();
+  }
+  function top(){
+    $('#qpos').textContent = `Aufgabe ${Math.min(R.i + 1, ROUND)} von ${ROUND}`;
+    $('#qscore').textContent = `Sofort richtig: ${R.tasks.filter(x => x.firstOk).length}`;
+    $('#qbar').style.width = `${(R.i + (cur().done ? 1 : 0)) / ROUND * 100}%`;
+  }
+  function say(t, cls, msg){ t.cls = cls; t.msg = msg; const s = $('#qsay'); if (s){ s.className = `say ${cls}`; s.innerHTML = msg; } }
+  function finishTask(t, msg){ t.done = true; t.cls = 'ok'; t.msg = msg; render(); const nx = $('#qnext'); if (nx) nx.focus({preventScroll:true}); }
+
+  function wire(t){
+    document.querySelectorAll('#qbody .op').forEach(b => b.addEventListener('click', () => {
+      if (t.done) return;
+      const i = +b.dataset.o;
+      if (t.type === 'read'){
+        const o = t.opts[i]; first(t, !!o.ok);
+        if (o.ok){ o.state = 'right'; finishTask(t, `Genau! Das Ganze hat ${t.n} gleiche Teile, ${t.a} davon ${t.a === 1 ? 'ist' : 'sind'} gefärbt.`); return; }
+        o.state = 'wrong';
+        t.cls = 'no'; t.msg = o.why === 'white' ? 'Das sind die weißen Teile. Oben stehen die gefärbten Teile.' : 'Unten stehen alle Teile, in die das Ganze geteilt ist, nicht nur die weißen.';
+        render();
+      } else if (t.type === 'cmp'){
+        first(t, i === t.best);
+        t.showPic = true;
+        const [L, Rr] = [t.L, t.R], d = lcm(L[1], Rr[1]);
+        const conv = `${F(L[0], L[1])} = ${F(L[0] * d / L[1], d)} und ${F(Rr[0], Rr[1])} = ${F(Rr[0] * d / Rr[1], d)}`;
+        if (i === t.best){
+          t.states[i] = 'right';
+          const why = t.kind === 'n' ? 'Gleich große Stücke: Mehr Stücke sind mehr.'
+            : t.kind === 'z' ? 'Gleich viele Stücke, aber mehr Teile heißt kleinere Stücke.'
+            : t.kind === 'eq' ? `Die Farbe reicht gleich weit. ${conv}.`
+            : `Mit gleich großen Stücken siehst du es: ${conv}.`;
+          finishTask(t, `Richtig! ${why}`);
+          return;
+        }
+        t.states[i] = 'wrong'; t.cls = 'no';
+        t.msg = t.kind === 'n' ? 'Die Stücke sind gleich groß. Zähl, wer mehr Stücke hat.'
+          : t.kind === 'z' ? 'Achtung, Falle! Mehr Teile heißt kleinere Stücke. Schau auf die Streifen.'
+          : t.kind === 'eq' ? 'Schau genau auf die Streifen: Wo hört die Farbe auf?'
+          : `Schau auf die Streifen. Mit gleich großen Stücken: ${conv}.`;
+        render();
+      }
+    }));
+    if (t.type === 'color' && !t.done){
+      const el = $('#qpic');
+      tappable(el, i => { t.on[i] = !t.on[i]; drawPic(t, wOf($('#qbody'))); refocus(el, i); });
+    }
+    const chk = $('#qcheck'), inp = $('#qin'), hint = $('#qhint');
+    if (chk) chk.addEventListener('click', () => check(t));
+    if (inp && !t.done){
+      inp.addEventListener('input', () => { inp.value = inp.value.replace(/\D/g, '').slice(0, 3); });
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter') check(t); });
+    }
+    if (hint) hint.addEventListener('click', () => {
+      t.showPic = true; render();
+      if (t.type === 'part') say(t, '', `Teile die ${t.N} ${t.ctx.u} in ${t.b} gleiche Gruppen: ${t.N} : ${t.b}. Wie viele sind dann ${t.a} Gruppen?`);
+      else if (t.type === 'erw') say(t, '', `Jedes Stück ist in ${t.k} kleine Stücke geschnitten. Zähl die gefärbten kleinen Stücke.`);
+      else say(t, '', `Die dicken Striche fassen je ${t.k} kleine Stücke zusammen. Zähl die gefärbten großen Stücke.`);
+      const i2 = $('#qin'); if (i2) i2.focus({preventScroll:true});
+    });
+    const nx = $('#qnext');
+    if (nx) nx.addEventListener('click', () => { R.i++; R.i < ROUND ? render() : finish(); });
+  }
+
+  function check(t){
+    if (t.done) return;
+    if (t.type === 'color'){
+      const c = t.on.filter(Boolean).length;
+      if (c === 0){ say(t, 'no', 'Tipp zuerst auf die Teile, die du färben willst.'); return; }
+      first(t, c === t.a);
+      if (c === t.a){ finishTask(t, `Richtig! ${t.a} von ${t.n} gleichen Teilen sind gefärbt.`); return; }
+      say(t, 'no', `Du hast ${c} ${c === 1 ? 'Teil' : 'Teile'} gefärbt. Oben im Bruch steht ${t.a}: so viele Teile sollen gefärbt sein.`);
+      return;
+    }
+    const inp = $('#qin'), v = parseInt(inp.value, 10);
+    if (isNaN(v)){ say(t, 'no', 'Schreib zuerst deine Zahl ins Kästchen.'); return; }
+    if (t.type === 'erw' || t.type === 'kurz'){
+      const {a, b, k} = t, erw = t.type === 'erw', ans = erw ? a * k : a;
+      first(t, v === ans);
+      if (v === ans){
+        finishTask(t, erw ? `Richtig! Unten mal ${k} (${b} · ${k} = ${b * k}), also oben auch mal ${k}: ${a} · ${k} = ${a * k}.`
+                          : `Richtig! Unten durch ${k} (${b * k} : ${k} = ${b}), also oben auch durch ${k}: ${a * k} : ${k} = ${a}.`);
+        return;
+      }
+      t.showPic = true; render();
+      say(t, 'no', erw ? `Noch nicht. Unten wurde mal ${k} gerechnet (${b} · ${k} = ${b * k}). Dann muss oben auch mal ${k} gerechnet werden. Schau auf die Streifen.`
+                       : `Noch nicht. Unten wurde durch ${k} geteilt (${b * k} : ${k} = ${b}). Dann oben auch durch ${k}, wie bei den Nullen-Paaren. Schau auf die Streifen.`);
+      $('#qin').select();
+      return;
+    }
+    if (t.type === 'part'){
+      const ans = t.per * t.a;
+      first(t, v === ans);
+      if (v === ans){ finishTask(t, `Richtig! ${t.N} : ${t.b} = ${t.per}, und ${t.per} · ${t.a} = ${ans}.`); return; }
+      t.showPic = true; render();
+      say(t, 'no', v === t.per ? `Das ist ${fname(1, t.b)} (${t.N} : ${t.b} = ${t.per}). Gefragt sind aber ${fname(t.a, t.b)}, also ${t.a} Gruppen.`
+        : v === t.N - ans ? `Das ist der Rest. Gefragt sind ${F(t.a, t.b)} von ${t.N}.`
+        : `Noch nicht. Erst ${t.N} : ${t.b} rechnen, das ist eine Gruppe. Dann mal ${t.a}.`);
+      $('#qin').select();
+    }
+  }
+  function finish(){
+    const ok = R.tasks.filter(x => x.firstOk).length;
+    $('#qbody').innerHTML = `<p class="done">Geschafft! ${ok} von ${ROUND} Aufgaben waren sofort richtig.</p>
+      <div class="controls"><button class="btn" id="again" type="button">Neue Runde</button></div>`;
+    $('#qpos').textContent = `${ROUND} von ${ROUND}`; $('#qbar').style.width = '100%';
+    $('#again').addEventListener('click', newRound);
+  }
+
+  // ---------- start ----------
+  heroDraw(); eqDraw(); cmpDraw(); partDraw(); newRound();
+  let rt = 0, lastW = innerWidth;
+  addEventListener('resize', () => {
+    if (innerWidth === lastW) return; lastW = innerWidth;
+    clearTimeout(rt); rt = setTimeout(() => { heroDraw(); eqDraw(); cmpDraw(); if (cur()) drawPic(cur(), wOf($('#qbody'))); }, 120);
+  });
+})();
+</script>
+</body>
+</html>
