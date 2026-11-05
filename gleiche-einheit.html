@@ -162,6 +162,9 @@ p{margin:0}
 .stage{display:grid; gap:12px}
 .done{font:750 clamp(26px,5vw,38px)/1.15 var(--display)}
 .controls{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+/* Pulsing ring on the button that reveals the next step. */
+.nudge:not(:disabled){animation:nudge 1.8s ease-out infinite}
+@keyframes nudge{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--pen) 55%,transparent)}70%,100%{box-shadow:0 0 0 12px color-mix(in srgb,var(--pen) 0%,transparent)}}
 .btn{
   font:700 19px/1 var(--display); border-radius:14px; padding:14px 22px; cursor:pointer;
   border:2px solid var(--pen); background:var(--pen); color:var(--pen-ink);
@@ -363,6 +366,7 @@ footer a{color:var(--pen)}
     const nb = $('#tk-next');
     nb.textContent = ['1. Umrechnen', '2. Rechnen', '3. Zurückrechnen', 'Fertig'][TK.step];
     nb.disabled = TK.step === 3;
+    nb.classList.toggle('nudge', TK.step < 3);
   }
   document.querySelectorAll('.tk-ctl .stepper button').forEach(b => b.addEventListener('click', () => {
     const k = b.dataset.k; TK[k] = clamp(TK[k] + +b.dataset.d, k === 'A' ? 1 : 0, k === 'A' ? 3 : 6); TK.step = 0; drawTk();

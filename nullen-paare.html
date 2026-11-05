@@ -136,6 +136,9 @@ p{margin:0}
 .key{--s:28px; display:inline-flex; align-items:center; gap:8px; padding:4px 10px 4px 6px; border:1.5px solid var(--line); border-radius:10px; background:var(--paper); color:var(--ink); font-weight:700}
 
 .controls{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+/* Pulsing ring on the button that reveals the next step. */
+.nudge:not(:disabled){animation:nudge 1.8s ease-out infinite}
+@keyframes nudge{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--pen) 55%,transparent)}70%,100%{box-shadow:0 0 0 12px color-mix(in srgb,var(--pen) 0%,transparent)}}
 .btn{
   font:700 19px/1 var(--display); border-radius:14px; padding:14px 22px; cursor:pointer;
   border:2px solid var(--pen); background:var(--pen); color:var(--pen-ink);
@@ -395,7 +398,7 @@ footer a{color:var(--pen)}
       board.innerHTML = groupsHTML(c.cb, c.q, c.r, c.u.v);
       board.setAttribute('aria-label', `${c.ca} ${c.u.many}`);
       cap.innerHTML = `<span class="key">${SVG[c.u.v]} = ${fmt(c.u.v)}</span><span>${c.ca} ${c.ca === 1 ? c.u.one : c.u.many} sind ${fmt(L.a)}.</span>`;
-      playBtn.disabled = false;
+      playBtn.disabled = false; playBtn.classList.add('nudge');
     } else {
       board.innerHTML = `<div class="msg">${fmt(c.ca)} ${c.u.many || c.u.n} sind zu viele zum Malen.${L.pairs < mp ? ' Streich ein Nullen-Paar, dann werden die Klötze größer und es werden weniger.' : ' Rechne im Kopf weiter oder probier eine andere Aufgabe.'}</div>`;
       board.setAttribute('aria-label', 'zu viele Klötze');
@@ -421,6 +424,7 @@ footer a{color:var(--pen)}
     const c = current();
     if (!SVG[c.u.v] || c.ca > MAX_TILES) return;
     renderLab();
+    playBtn.classList.remove('nudge');
     board.classList.add('grouped');
     const ans = $('#ans');
     const groups = [...board.querySelectorAll('.grp')], n = groups.length;

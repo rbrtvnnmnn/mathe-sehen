@@ -160,6 +160,9 @@ p{margin:0}
 .done{font:750 clamp(26px,5vw,38px)/1.15 var(--display)}
 .stage{display:grid; gap:12px}
 .controls{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+/* Pulsing ring on the button that reveals the next step. */
+.nudge:not(:disabled){animation:nudge 1.8s ease-out infinite}
+@keyframes nudge{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--pen) 55%,transparent)}70%,100%{box-shadow:0 0 0 12px color-mix(in srgb,var(--pen) 0%,transparent)}}
 .btn{
   font:700 19px/1 var(--display); border-radius:14px; padding:14px 22px; cursor:pointer;
   border:2px solid var(--pen); background:var(--pen); color:var(--pen-ink);
@@ -410,6 +413,7 @@ footer a{color:var(--pen)}
   }
   function drawCompare(){
     $('#vb').textContent = C.brown; $('#vy').textContent = C.blond;
+    $('#pair').classList.toggle('nudge', !C.paired);
     drawKids();
     const out = $('#cmp-out'), line = $('#cmp-line');
     if (!C.paired){ out.innerHTML = `<p class="soft">Tipp auf „Paare bilden“.</p>`; line.hidden = true; return; }

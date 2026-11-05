@@ -125,6 +125,9 @@ p{margin:0}
 .msg{padding:18px; border:2px dashed var(--line); border-radius:14px; color:var(--ink-soft); width:100%}
 
 .controls{display:flex; flex-wrap:wrap; gap:10px}
+/* Pulsing ring on the button that reveals the next step. */
+.nudge:not(:disabled){animation:nudge 1.8s ease-out infinite}
+@keyframes nudge{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--pen) 55%,transparent)}70%,100%{box-shadow:0 0 0 12px color-mix(in srgb,var(--pen) 0%,transparent)}}
 .btn{
   font:700 19px/1 var(--display); border-radius:14px; padding:14px 22px; cursor:pointer;
   border:2px solid var(--pen); background:var(--pen); color:var(--pen-ink);
@@ -340,7 +343,7 @@ p{margin:0}
       board.innerHTML = `<div class="msg">Das wären ${fmt(s.ca)} Klötze. So viele passen nicht aufs Blatt. Probier Zahlen, die auf Nullen enden, zum Beispiel ${fmt(a * 100)} : ${fmt(b * 100)}.</div>`;
       cap.innerHTML = ''; renderFamily(); return;
     }
-    playBtn.disabled = false;
+    playBtn.disabled = false; playBtn.classList.add('nudge');
     say.innerHTML = u.v === 1
       ? `Jeder Würfel ist <b>1</b>. Wie oft ${passt(b)} <b>${fmt(b)}</b> in <b>${fmt(a)}</b>?`
       : `${fmt(a)} sind <b>${s.ca} ${u.n}</b>. ${fmt(b)} sind <b>${s.cb} ${u.n}</b>. Wie oft ${passt(s.cb)} ${s.cb} ${u.n} in ${s.ca} ${u.n}?`;
@@ -353,6 +356,7 @@ p{margin:0}
   function play(){
     if (!state) return;
     render();
+    playBtn.classList.remove('nudge');
     const s = state;
     board.classList.add('grouped');
     const groups = [...board.querySelectorAll('.grp')];

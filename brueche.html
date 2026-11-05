@@ -181,6 +181,9 @@ a{color:var(--pen)}
 .done{font:750 clamp(26px,5vw,38px)/1.15 var(--display)}
 .stage{display:grid; gap:14px}
 .controls{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+/* Pulsing ring on the button that reveals the next step. */
+.nudge:not(:disabled){animation:nudge 1.8s ease-out infinite}
+@keyframes nudge{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--pen) 55%,transparent)}70%,100%{box-shadow:0 0 0 12px color-mix(in srgb,var(--pen) 0%,transparent)}}
 .btn{
   font:700 19px/1 var(--display); border-radius:14px; padding:14px 22px; cursor:pointer;
   border:2px solid var(--pen); background:var(--pen); color:var(--pen-ink);
@@ -467,6 +470,7 @@ footer{color:var(--ink-soft); font-size:15px; display:flex; flex-wrap:wrap; gap:
     if (P.step === 1) t += `<p class="calc-line" style="color:var(--ink-soft)">${per} · ${a} = ?</p><p class="hint-line">Du brauchst ${a} ${a === 1 ? 'Stück' : 'Stücke'}. Tipp auf „${a} ${a === 1 ? 'Gruppe' : 'Gruppen'} nehmen“.</p>`;
     if (P.step >= 2) t += `<p class="calc-line">${per} · ${a} = ${ans}</p><p>${cap(fname(a, b))} von ${N} ${d} sind <b>${ans} ${u}</b>. Erst teilen (Ganzes : Nenner), dann malnehmen (ein Stück · Zähler). Wie bei den <a href="rechengeschichten.html">Rechengeschichten</a>.</p>`;
     $('#p-out').innerHTML = t;
+    $('#p-next').classList.toggle('nudge', P.step < 2);
     $('#p-next').textContent = P.step === 0 ? `In ${b} gleiche Gruppen teilen` : P.step === 1 ? `${a} ${a === 1 ? 'Gruppe' : 'Gruppen'} nehmen` : 'Nochmal';
     document.querySelectorAll('#p-chips .chip').forEach((c, i) => c.classList.toggle('sel', PX[i] === P.ex));
   }
