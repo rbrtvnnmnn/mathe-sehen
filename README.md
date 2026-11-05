@@ -1,6 +1,6 @@
 # Sehen & Verstehen
 
-Interaktive Übungen für alle, die verstehen statt auswendig lernen wollen. Die Idee: Regeln sind leichter, wenn man sieht, warum sie stimmen. Erst sehen, dann verstehen.
+Interaktive Übungen für alle, die verstehen statt auswendig lernen wollen. Die Idee: Was man einmal gesehen hat, versteht man. Und was man versteht, muss man nicht auswendig lernen.
 
 Angefangen hat es mit Mathe („Mathe sehen“). Weitere Fächer sollen nach und nach dazukommen.
 
