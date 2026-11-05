@@ -10,6 +10,20 @@ Alle Übungen in der empfohlenen Reihenfolge stehen auf der Übersichtsseite: ht
 
 Jede Übung endet mit Aufgaben zum Selberrechnen.
 
+## Ideen für weitere Übungen
+
+Für die Klassen 1 bis 7, sortiert nach großen Ideen, die in Mathe und in den Naturwissenschaften immer wieder vorkommen:
+
+1. **Bündeln in Zehnern:** Stellenwerte, Kommazahlen und Einheiten (m, cm, kg, g) folgen demselben Prinzip.
+2. **Teil und Ganzes:** Brüche, Prozente, Anteile und Kreisdiagramme, als Streifen oder Pizza.
+3. **Verhältnisse:** Dreisatz, Rezepte, Maßstab, Geschwindigkeit, Dichte. Doppelt so viel von dem einen heißt doppelt so viel von dem anderen.
+4. **Gleichgewicht:** Gleichungen als Waage, Hebel, Wippe.
+5. **Größenordnungen:** das Sonnensystem maßstabsgetreu, die Erdgeschichte als Zeitstrahl, die Zelle unter dem Mikroskop.
+6. **Kreisläufe:** Wasserkreislauf, Blutkreislauf, Nahrungskette, Tag und Nacht, Jahreszeiten, gern als Animation.
+7. **Oberfläche und Volumen:** Warum haben Elefanten große Ohren und warum frieren kleine Tiere schneller?
+
+Weitere Ideen gern als Issue.
+
 ## Benutzen
 
 - **Online:** https://rbrtvnnmnn.github.io/sehen-verstehen/
